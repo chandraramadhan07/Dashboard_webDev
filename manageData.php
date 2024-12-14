@@ -2,41 +2,69 @@
 include 'database/database.php';
 session_start();
 
+// PAGGINATION
+include "php/paggination.php";
 
 // ADD DATA
-$addMessage = "";
 if (isset($_POST['submit'])) {
+  $sql_cek_idProduk = "SELECT * FROM produk WHERE id_produk = '$_POST[kode_produk]'";
+  $result_cek_idProduk = mysqli_query($db, $sql_cek_idProduk);
+  $cek_idProduk = $result_cek_idProduk -> num_rows;
+
+  if ($cek_idProduk > 0) {
+    echo "<script>alert('Produk Sudah Ada')</script>";
+  } else {
+    $kode_produk = $_POST['kode_produk'];
   $namaProduk = $_POST['nama_produk'];
-  $kategori = $_POST['kategori'];
-  $stokAwal = $_POST['stok_awal'];
+  $id_kategori = $_POST['kategori'];
+  $stok = $_POST['stok'];
   $hargaBeli = $_POST['harga_beli'];
   $hargaJual = $_POST['harga_jual'];
+  $laba = $stok * ($hargaJual - $hargaBeli);
 
-  $sql_produk = "INSERT INTO produk (nama_produk, kategori, stok, harga_beli, harga_jual)
-  VALUES ('$namaProduk', '$kategori', '$stokAwal', '$hargaBeli', '$hargaJual')";
-  
-  if (mysqli_query($db, $sql_produk)) {
-    $id_produk = mysqli_insert_id($db);
-    $tanggal = date("d-m-y");
-    $keterangan = "masuk";
-    $laba = $stokAwal * ($hargaJual - $hargaBeli);
-
-    $sql_stock = "INSERT INTO stok_produk (id_produk, tanggal, keterangan, laba)
-    VALUES ('$id_produk', '$tanggal', '$keterangan', '$laba')";
-    if (mysqli_query($db, $sql_stock)) {
-      $addMessage = "Data berhasil ditambahkan";
+  $sql_produk = "INSERT INTO produk (id_produk, nama_produk, kategori, stok, harga_beli, harga_jual, laba)
+                 VALUES ('$kode_produk', '$namaProduk', '$id_kategori', '$stok', '$hargaBeli', '$hargaJual', '$laba')";
+  $result_produk = mysqli_query($db, $sql_produk);
+    if ($result_produk) {
+      $sql_masuk = "INSERT INTO produk_masuk (id_produk, jumlah_masuk, created_at) VALUES ('$kode_produk', '$stok', NOW())";
+      $result_masuk = mysqli_query($db, $sql_masuk);
+      // ALERT BERHASIL, BELUM BERFUNGSI
+      echo "<script>alert('Produk Berhasil Ditambah')</script>";
+      header('Location: manageData.php');
+      
+      exit;
     }
   }
+  
 }
 
 // READ DATA
-$sql_read_data = "SELECT * FROM produk";
+$sql_read_data = "SELECT produk.id_produk, produk.nama_produk, produk.stok, produk.harga_beli, 
+                  produk.harga_jual, (produk.stok * (produk.harga_jual - produk.harga_beli)) AS laba, 
+                  kategori.nama_kategori 
+                  FROM produk INNER JOIN kategori ON produk.kategori = kategori.id_kategori  
+                  ORDER BY produk.id_produk DESC LIMIT $limit_baris OFFSET $offset";
 $result_read_data = mysqli_query($db, $sql_read_data);
 
-// Menampilkan nama produk fitur delete
-
+// EDIT DATA
+if (isset($_POST['save'])) {
+  $sql_edit = "UPDATE produk SET
+                              nama_produk = '$_POST[nama_produk]',
+                              kategori = '$_POST[kategori]',
+                              stok = '$_POST[stok]',
+                              harga_beli = '$_POST[harga_beli]',
+                              harga_jual = '$_POST[harga_jual]'
+                              WHERE id_produk = '$_POST[kode_produk]'";
+  $result_update = mysqli_query($db, $sql_edit);
+  header('Location: manageData.php');
+}
 
 // Hapus DATA
+if (isset($_POST['delete'])) {
+  $sql_delete = "DELETE FROM produk WHERE id_produk = '$_POST[kode_produk]'";
+  $result_delete = mysqli_query($db, $sql_delete);
+  header('Location: manageData.php');
+}
 ?>
 
 <!DOCTYPE html>
@@ -51,16 +79,27 @@ $result_read_data = mysqli_query($db, $sql_read_data);
   </head>
   <body>
     <div class="d-flex main">
-      <aside id="sidebar" class="sidebar position-relative pt-2 rounded-end-4">
+      <aside id="sidebar" class="sidebar pt-2">
         <div class="d-flex align-items-center justify-content-center">
-          <span class="d-flex align-items-center justify-content-center my-3" style="color: var(--icon)">Logo</span>
+          <span class="d-flex logo align-items-center justify-content-center my-3" style="color: var(--icon)">Logo</span>
         </div>
-        <!-- <div class="m-auto border-bottom w-75 border-secondary"></div> -->
-        <button id="arrow-button" class="arrow position-absolute border-0 shadow-lg d-flex align-items-center justify-content-center rounded-5"><i class="bi bi-arrow-right"></i></button>
+        <div class="position-relative">
+          <button id="arrow-button" class="arrow position-absolute border-0 shadow-lg d-flex align-items-center justify-content-center rounded-5"><i class="bi bi-arrow-right"></i></button>
+        </div>
         <div class="list-group mt-3">
+        <a href="" class="close-btn p-1"><i class="bi bi-x-lg text-white fs-5 mx-2"></i></a>
           <a href="dashboard.php" class="menu text-decoration-none mt-4 p-1 mx-2 rounded" aria-current="true"><i class="bi bi-house-fill fs-5 mx-2"></i><span class="position-absolute">Dashboard</span></a>
-          <a href="manageData.php" class="menu text-decoration-none mt-4 p-1 mx-2 rounded" aria-current="true"><i class="bi bi-dropbox fs-5 mx-2"></i><span class="position-absolute">Manage Data</span></a>
-          <a href="kelolaStok.php" class="menu text-decoration-none mt-4 p-1 mx-2 rounded" aria-current="true"><i class="bi bi-box-seam-fill fs-5 mx-2"></i><span class="position-absolute">Kelola Stok</span></a>
+          <a href="manageData.php" class="menu managedata-aside text-decoration-none mt-4 p-1 mx-2 rounded" aria-current="true"><i class="bi bi-dropbox fs-5 mx-2"></i><span class="position-absolute">Manage Data</span></a>
+          <a class="menu nav-link position-relative text-decoration-none mt-4 p-1 mx-2 rounded text-white" data-bs-toggle="collapse" href="#kelolaProduk" role="button" aria-expanded="false" aria-controls="kelolaProduk">
+          <i class="bi bi-box-seam-fill fs-5 mx-2"></i><span class="position-absolute">Kelola Stok<i class="bi ms-2 bi-caret-down-fill"></i>
+          </span>
+          </a>
+          <div class="kelolastok-dropdown collapse" id="kelolaProduk">
+            <ul class="list-unstyled ps-3 d-flex flex-column gap-2">
+              <li class="d-flex align-items-center my-2" style="margin-left: 2rem;"><a href="barangMasuk.php" class="menu me-2 p-1 nav-link text-white rounded">Barang Masuk</a></li>
+              <li class="d-flex align-items-center" style="margin-left: 2rem;"><a href="barangKeluar.php" class="menu me-2 p-1 nav-link text-white rounded">Barang Keluar</a></li>
+            </ul>
+          </div>
           <a href="laporan.php" class="menu text-decoration-none mt-4 p-1 mx-2 rounded" aria-current="true"><i class="bi bi-file-earmark-text-fill fs-5 mx-2"></i><span class="position-absolute">Laporan</span></a>
           <a href="logout.php" class="logout d-flex align-items-center text-decoration-none text-danger position-absolute mt-4 p-1 mx-2" aria-current="true"
             ><i class="bi bi-box-arrow-in-left fs-5 mx-2"></i><span class="=position-absolute">Logout</span></a
@@ -71,28 +110,50 @@ $result_read_data = mysqli_query($db, $sql_read_data);
       <div class="content container-fluid">
         <nav class="navbar px-4 navbar-expand-lg">
           <div class="container-fluid position-relative d-flex align-items-center">
-            <div class="header">
-              <a class="navbar-brand fw-semibold" href="#">Hallo, Admin!</a>
-              <p class="d-flex">May your day always be right</p>
+          <div class="header d-flex align-items-center ">
+              <i id="hamburger-menu" class="bi bi-list mx-2" style="font-size: 2rem"></i>
+              <div class="header-nav">
+              <p class="fs-4 m-0 text-decoration-none fw-semibold" >Hallo, Admin!</p>
+              <p class="d-flex m-0">May your day always be right</p>
+              </div>
             </div>
-            <div class="profile rounded-5 p-1 d-flex justify-content-between">
+            <div class="dropdown">
+              <button class="btn cards border-0 dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="bi text-secondary bi-sun-fill"></i>
+              </button>
+              <ul class="dropdown-menu cards">
+                <li><a id="lightmode-mobile" class="dropdown-item text-secondary" href="#"><i class="me-2 bi bi-sun-fill"></i>light</a></li>
+                <li><a id="darkmode-mobile" class="dropdown-item text-secondary" href="#"><i class="me-2 bi bi-moon-stars-fill"></i>Dark</a></li>
+              </ul>
+            </div>
+            <div class="profile cards rounded-5 p-1 d-flex justify-content-between">
               <input class="switch" type="checkbox" id="darkmode-toggle" />
               <label class="checkbox-label" for="darkmode-toggle">
-                <i class="bi bi-sun-fill rounded-5"></i>
-                <i class="bi bi-moon-stars-fill rounded-5"></i>
+                <i class="sun bi bi-sun-fill"></i>
+                <i class="moon bi bi-moon-stars-fill"></i>
               </label>
-              <a href="#" id="profil" class="d-flex align-items-center justify-content-center rounded-5 text-decoration-none"
-                ><i class="bi bi-person-fill fs-5 d-flex bg-white d-flex align-items-center justify-content-center rounded-end-4 rounded-start-4 text-secondary"></i
+              <a href="#" id="profil" class="d-flex align-items-center justify-content-center text-decoration-none"
+                ><i class="bi bi-person-fill fs-5 d-flex bg-white d-flex align-items-center justify-content-center rounded-5 text-secondary"></i
               ></a>
             </div>
 
-            <div id="popup" class="popup position-absolute rounded shadow-lg">
-              <div class="user-profil p-4">
+            <div id="popup" class="popup cards position-absolute rounded shadow-lg">
+              <div class="user-profil p-4 pb-0">
                 <div class="user-info d-flex align-items-center justify-content-center">
                   <img src="asset/user.png" class="w-50 mb-3" alt="" />
                   <h2>Budi</h2>
                 </div>
-                <div class="m-auto border-bottom border-1 border-black border-dark-subtle w-75"></div>
+                <div class="m-auto border-bottom border-1 border-black border-dark-subtle"></div>
+                <div class="user d-flex flex-column align-items-center justify-content-center mt-2">
+                  <span class="fs-4 ">Admin</span>
+                  <p class="text-center"><?= date("l, jS F Y h:i:s A");?></p>
+                </div>
+                <div class="logout-profil ">
+                  <div class="m-auto border-bottom border-1 border-black border-dark-subtle"></div>
+                  <div class="user d-flex align-items-center justify-content-center my-2">
+                    <a href="logout.php" class="fs-5 text-decoration-none text-danger d-flex align-items-center"><i class="bi bi-box-arrow-in-left fs-5 mx-2"></i>Logout</a>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -102,60 +163,152 @@ $result_read_data = mysqli_query($db, $sql_read_data);
           <div class="container-fluid px-5 pt-4 py-5">
             <h2 class="mb-3">Kelola Produk</h2>
             <div class="flex-wrap container-fluid">
-              <div class="data-stok row">
                 <div class="card cards shadow-sm border-0 col-md-12">
                   <div class="card-body">
                     <h5 class="card-title m-0">Data Produk</h5>
-                    <a href="" data-bs-toggle="modal" data-bs-target="#exampleModal" class="d-inline-block text-decoration-none p-2 bg-primary text-white rounded my-3" style="font-size: 14px">Add Data</a>
-                    <p><?php echo $addMessage ?></p>
-                    <table class="table table-bordered border-secondary">
-                      <thead>
-                        <tr>
-                          <th>No</th>
-                          <th>Nama Produk</th>
-                          <th>Kategori</th>
-                          <th>Stok Awal</th>
-                          <th>Harga Beli</th>
-                          <th>Harga Jual</th>
-                          <th>Aksi</th>
-                        </tr>
-                      </thead>
-                      <tbody>
+                    <a href="" data-bs-toggle="modal" data-bs-target="#exampleModal" class="d-inline-block text-decoration-none p-2 bg-primary text-white rounded my-3" >Add Data</a>
+                    <div class="table-responsive">
+                    <table class="table table-bordered border-secondary px-2">
+                        <thead>
+                          <tr>
+                            <th style="width: 30px;">No</th>
+                            <th>Kode Produk</th>
+                            <th>Nama Produk</th>
+                            <th>Kategori</th>
+                            <th>Stok</th>
+                            <th>Harga Beli</th>
+                            <th>Harga Jual</th>
+                            <th>Laba</th>
+                            <th>Aksi</th>
+                          </tr>
+                        </thead>
+                        <tbody>
                         <?php
-                        if (mysqli_num_rows($result_read_data) > 0) {
-                          $no = 1;
-                          while($data = mysqli_fetch_array($result_read_data)){
-                        
-                        echo "<tr>";
-                          echo "<td>".$no++."</td>";
-                          echo "<th>".$data['nama_produk']."</th>";
-                          echo "<td>".$data['kategori']."</td>";
-                          echo "<td>".$data['stok']."</td>";
-                          echo "<td>".$data['harga_beli']."</td>";
-                          echo "<td>".$data['harga_jual']."</td>";
-                          echo "<td>";
-                            echo"<div class='d-flex gap-2'>";
-                              echo "<a data-bs-toggle='modal' data-bs-target='#edit' class='fs-5 text-white d-flex align-items-center justify-content-center bg-primary rounded' style='width: 30px; height: 30px'
-                                ><i class='bi bi-pencil-square'></i
-                              ></a>";
-                              echo "<a data-bs-toggle='modal' data-bs-target='#delete' class='fs-5 text-white d-flex align-items-center justify-content-center bg-danger rounded' style='width: 30px; height: 30px'
-                                ><i class='bi bi-trash'></i
-                              ></a>";
-                            echo "</div>";
-                          echo"</td>";
-                          }
-                        }
-                          ?>
+                          $no = $offset+1;
+                          while($data = mysqli_fetch_array($result_read_data)):
+                        ?>
+                        <tr>
+                            <td><?= $no++; ?></td>
+                            <td><?= $data['id_produk']; ?></td>
+                            <td><?= $data['nama_produk']; ?></td>
+                            <td><?= $data['nama_kategori']; ?></td>
+                            <td><?= $data['stok']; ?></td>
+                            <td>Rp <?=number_format($data['harga_beli'], 2, ",", ".");?></td>
+                            <td>Rp <?=number_format($data['harga_jual'], 2, ",", ".");?></td>
+                            <td>Rp <?=number_format($data['laba'], 2, ",", ".");?></td>
+                            <td>
+                              <div class="d-flex gap-2">
+                                <a data-bs-toggle="modal" data-bs-target="#edit<?= $no ?>" class="fs-5 text-white d-flex align-items-center justify-content-center bg-primary rounded" style="width: 30px; height: 30px"
+                                ><i class="bi bi-pencil-square"></i
+                                ></a>
+                                <a data-bs-toggle="modal" data-bs-target="#delete<?= $no ?>" class="fs-5 text-white d-flex align-items-center justify-content-center bg-danger rounded" style="width: 30px; height: 30px"
+                                ><i class="bi bi-trash"></i
+                                ></a>
+                              </div>
+                            </td>
                         </tr>
-                      </tbody>
-                    </table>
+                        </tbody>
+                        
+                        <!-- Modal Edit -->
+                      <div class="modal fade" id="edit<?= $no; ?>" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                          <div class="modal-content">
+                            <div class="modal-header">
+                              <h1 class="modal-title fs-5" id="exampleModalLabel">Edit Produk</h1>
+                              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                              <form method="POST" class="w-100 h-50 p-4 d-flex flex-column rounded-3 justify-content-center">
+                              <input type="hidden" name="kode_produk" value="<?= $data['id_produk']; ?>">
+                              
+                                <div class="mb-3">
+                                <label class="form-label">Nama Produk</label>
+                                    <input type="text" value="<?= $data['nama_produk']; ?>" name="nama_produk" placeholder="Nama Produk" class="form-control" id="" aria-describedby="emailHelp" />
+                                  </div>
+                                  <div class="mb-3">
+                                    <label class="form-label">Kategori</label>
+                                    <div class="form-check">
+                                      <input class="form-check-input" type="radio" name="kategori" id="kategori1" value="1" required  <?= $data['nama_kategori'] === 'Makananan' ? 'checked' : '' ?> />
+                                      <label class="form-check-label" for="kategori1">Makanan</label>
+                                    </div>
+                                    <div class="form-check">
+                                      <input class="form-check-input" type="radio" name="kategori" id="kategori2" value="2" required <?= $data['nama_kategori'] === 'Minuman' ? 'checked' : '' ?> />
+                                      <label class="form-check-label" for="kategori2">Minuman</label>
+                                    </div>
+                                    <div class="form-check">
+                                      <input class="form-check-input" type="radio" name="kategori" id="kategori3" value="3" required <?= $data['nama_kategori'] === 'Elektronik' ? 'checked' : '' ?> />
+                                      <label class="form-check-label" for="kategori3">Elektronik</label>
+                                    </div>
+                                    <div class="form-check">
+                                      <input class="form-check-input" type="radio" name="kategori" id="kategori4" value="4" required <?= $data['nama_kategori'] === 'Peralatan Masak' ? 'checked' : '' ?> />
+                                      <label class="form-check-label" for="kategori3">Peralatan Masak</label>
+                                    </div>
+                                    <div class="form-check">
+                                      <input class="form-check-input" type="radio" name="kategori" id="kategori5" value="5" required <?= $data['nama_kategori'] === 'Bumbu' ? 'checked' : '' ?> />
+                                      <label class="form-check-label" for="kategori3">Bumbu</label>
+                                    </div>
+                                    <div class="form-check">
+                                      <input class="form-check-input" type="radio" name="kategori" id="kategori6" value="6" required <?= $data['nama_kategori'] === 'Obat' ? 'checked' : '' ?> />
+                                      <label class="form-check-label" for="kategori3">Obat</label>
+                                    </div>
+                                  </div>
+                                  <div class="mb-3">
+                                    <label class="form-label">Stok Produk</label>
+                                    <input type="number" value="<?= $data['stok']; ?>" name="stok" placeholder="Stok" min="0" class="form-control" />
+                                  </div>
+                                  <div class="mb-3">
+                                    <label class="form-label">Harga beli</label>
+                                    <input type="number" value="<?= $data['harga_beli']; ?>" name="harga_beli" placeholder="Harga Beli" class="form-control" />
+                                  </div>
+                                  <div class="mb-3">
+                                    <label class="form-label">Harga jual</label>
+                                    <input type="number" value="<?= $data['harga_jual']; ?>" name="harga_jual" placeholder="Harga Jual" class="form-control" />
+                                  </div>
+                              
+                                  <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                    <!-- *name=save nabrak dengan type=button -->
+                                    <button type="submit" name="save" class="btn btn-primary">Save changes</button>
+                                  <!-- *PENEMPATAN FORM (gak bisa di klik jika button tidak didalam tag form) -->  
+                                </div>
+                              </form>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                          <!-- Modal Delete -->
+                          <div class="modal fade" id="delete<?= $no ?>" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                              <div class="modal-content">
+                                <div class="modal-header">
+                                  <h1 class="modal-title fs-5" id="exampleModalLabel">Hapus Produk</h1>
+                                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                  <form method="POST" class="w-100 h-50 p-4 d-flex flex-column rounded-3 justify-content-center">
+                                    <p class="fw-semibold">Apakah anda yakin ingin menghapus <span class="text-danger"><?=$data['id_produk']?> - <?=$data['nama_produk'];?></span> dari gudang?</p>
+                                    <div class="modal-footer">
+                                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                      <!-- *name=delete nabrak dengan type=button -->
+                                      <input type="hidden" name="kode_produk" value="<?= $data['id_produk'] ?>">
+                                      <button type="submit" name="delete" class="btn btn-danger">Delete</button>
+                                      <!-- *PENEMPATAN FORM (gak bisa di klik jika button tidak didalam tag form) --> 
+                                    </div>
+                                  </form>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <?php endwhile; ?>
+                      </table>
+                    </div>
                     <div class="change-page d-flex gap-2 align-items-center justify-content-center">
-                      <a href="" class="p-1 d-flex align-items-center justify-content-center fw-semibold bg-primary text-decoration-none text-dark rounded" style="width: 35px; height: 35px">1</a>
-                      <a href="" class="p-1 d-flex align-items-center justify-content-center fw-semibold text-decoration-none text-dark rounded" style="width: 35px; height: 35px; background-color: var(--hover)">2</a>
+                      <?php for($i = 1; $i <= $total_page; $i++): ?>
+                    <a href="?page=<?= $i ?>" class="p-1 d-flex align-items-center justify-content-center fw-semibold  text-decoration-none rounded <?= $i == $page? 'bg-primary text-white':'bg-secondary text-white'?>" style="width: 35px; height: 35px"><?= $i ?></a>
+                      <?php endfor ?>
                     </div>
                   </div>
                 </div>
-              </div>
             </div>
           </div>
         </div>
@@ -166,7 +319,7 @@ $result_read_data = mysqli_query($db, $sql_read_data);
     <script src="script.js"></script>
   </body>
 
-  <!-- Modal -->
+  <!-- Modal ADD DATA -->
   <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
@@ -176,117 +329,61 @@ $result_read_data = mysqli_query($db, $sql_read_data);
         </div>
         <div class="modal-body">
           <!-- FORM ADD DATA -->
-          <form method="POST" class="w-100 h-50 p-4 d-flex flex-column rounded-3 justify-content-center">
+          <form method="POST" class="w-100 h-100 p-4 d-flex flex-column rounded-3 justify-content-center">
             <div class="mb-3">
-              <input type="text" name="nama_produk" placeholder="Nama Produk" class="form-control" id="" aria-describedby="emailHelp" />
+                <input type="text" name="kode_produk" placeholder="Id Produk" value="PR_" class="form-control" id="" aria-describedby="emailHelp" required />
             </div>
-            <div class="mb-3">
-              <label class="form-label">Kategori</label>
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="kategori" id="kategori1" value="Elektronik" />
-                <label class="form-check-label" for="kategori1">Elektronik</label>
+              <div class="mb-3">
+                <input type="text" name="nama_produk" placeholder="Nama Produk" class="form-control" id="" aria-describedby="emailHelp" required />
               </div>
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="kategori" id="kategori2" value="Pakaian" />
-                <label class="form-check-label" for="kategori2">Pakaian</label>
+              <div class="mb-3">
+                <label class="form-label">Kategori</label>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="kategori" id="kategori1" value="1" required  />
+                  <label class="form-check-label" for="kategori1">Makanan</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="kategori" id="kategori2" value="2" required />
+                  <label class="form-check-label" for="kategori2">Minuman</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="kategori" id="kategori3" value="3" required />
+                  <label class="form-check-label" for="kategori3">Elektronik</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="kategori" id="kategori4" value="4" required />
+                  <label class="form-check-label" for="kategori3">Peralatan Masak</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="kategori" id="kategori5" value="5" required />
+                  <label class="form-check-label" for="kategori3">Bumbu</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="kategori" id="kategori6" value="6" required  />
+                  <label class="form-check-label" for="kategori3">Obat</label>
+                </div>
               </div>
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="kategori" id="kategori3" value="Makanan" />
-                <label class="form-check-label" for="kategori3">Makanan</label>
+              <div class="mb-3">
+                <input type="number" name="stok" placeholder="Stok Awal" class="form-control" id="" required />
               </div>
-            </div>
-            <div class="mb-3">
-              <input type="number" name="stok_awal" placeholder="Stok Awal" class="form-control" id="" />
-            </div>
-            <div class="mb-3">
-              <input type="number" name="harga_beli" placeholder="Harga Beli" class="form-control" id="" />
-            </div>
-            <div class="mb-3">
-              <input type="number" name="harga_jual" placeholder="Harga Jual" class="form-control" id="" />
-            </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          <!-- *Button name=submit nabrak sama type=button -->
-          <button name="submit" class="btn btn-primary">Add changes</button>
-        </div>
-        <!-- *PENEMPATAN FORM (gak bisa di submit jika button tidak didalam tag form) -->
-        </form>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal Edit -->
-  <div class="modal fade" id="edit" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h1 class="modal-title fs-5" id="exampleModalLabel">Edit Produk</h1>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <form method="POST" class="w-100 h-50 p-4 d-flex flex-column rounded-3 justify-content-center">
-            <div class="mb-3">
-              <input type="email" name="nama_produk" placeholder="Nama Produk" class="form-control" id="" aria-describedby="emailHelp" />
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Kategori</label>
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="kategori" id="kategori1" value="Elektronik" />
-                <label class="form-check-label" for="kategori1">Elektronik</label>
+              <div class="mb-3">
+                <input type="number" name="harga_beli" placeholder="Harga Beli" class="form-control" id="" required />
               </div>
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="kategori" id="kategori2" value="Pakaian" />
-                <label class="form-check-label" for="kategori2">Pakaian</label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="kategori" id="kategori3" value="Makanan" />
-                <label class="form-check-label" for="kategori3">Makanan</label>
+              <div class="mb-3">
+                <input type="number" name="harga_jual" placeholder="Harga Jual" class="form-control" id="" required />
               </div>
             </div>
-            <div class="mb-3">
-              <input type="number" name="stok_awal" placeholder="Stok Awal" class="form-control" id="" />
-            </div>
-            <div class="mb-3">
-              <input type="number" name="harga_beli" placeholder="Harga Beli" class="form-control" id="" />
-            </div>
-            <div class="mb-3">
-              <input type="number" name="harga_jual" placeholder="Harga Jual" class="form-control" id="" />
-            </div>
-          
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          <!-- *name=save nabrak dengan type=button -->
-          <button name="save" class="btn btn-primary">Save changes</button>
-        <!-- *PENEMPATAN FORM (gak bisa di klik jika button tidak didalam tag form) -->  
-          </form>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal Delete -->
-  <div class="modal fade" id="delete" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h1 class="modal-title fs-5" id="exampleModalLabel">Hapus Produk</h1>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <form class="w-100 h-50 p-4 d-flex flex-column rounded-3 justify-content-center">
-            <p class="fw-semibold">Apakah anda yakin ingin menghapus {nama produk} ini?</p>
-          
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          <!-- *name=delete nabrak dengan type=button -->
-          <button name='delete' class='btn btn-danger'>Delete</button>"
-          <!-- *PENEMPATAN FORM (gak bisa di klik jika button tidak didalam tag form) --> 
+            <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <!-- *Button name=submit nabrak sama type=button -->
+            <button name="submit" class="btn btn-primary">Add changes</button>
+          </div>
+          <!-- *PENEMPATAN FORM (gak bisa di submit jika button tidak didalam tag form) -->
         </form>
         </div>
-      </div>
     </div>
+        
   </div>
+
+  
 </html>

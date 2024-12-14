@@ -37,8 +37,10 @@ if (isset($_POST['login'])) {
   </head>
   <body>
     <div class="container d-flex flex-column justify-content-center align-items-center vh-100">
-      <h4 class="text-center mb-5">Inventory Grocery Store</h4>
-      <div class="card shadow-sm p-5 border-0" style="width: 500px; background-color: #f8fafc">
+      <div class="card card-login shadow-sm p-4 border-0" style="width: 40%; background-color: #f8fafc">
+        <img src="asset/logo-login.png" class="mx-auto d-block" width=150 alt="">
+        <h4 class="text-center ">Inventory Grocery Store</h4>
+        <p class="text-center fw-semibold fs-4">Sign in</p>
           <div class="card-body">
           <?php if ($error): ?>
             <p style="color: red;"><?php echo $error;?></p>
@@ -46,12 +48,12 @@ if (isset($_POST['login'])) {
           <form method="POST">
             <div class="form-group mb-3">
               <label for="username" class="fw-semibold">Username</label>
-              <input type="text" class="form-control border-0" id="username" name="username" required />
+              <input type="text" class="login form-control border-0" id="username" name="username" required />
               <div class="border border-dark"></div>
             </div>
             <div class="form-group">
               <label for="password" class="fw-semibold">Password</label>
-              <input type="password" class="form-control border-0" id="password" name="password" required />
+              <input type="password" class="login form-control border-0" id="password" name="password" required />
               <div class="border border-dark"></div>
             </div>
             <button type="submit" name="login" class="btn btn-primary mt-5 w-100 btn-block">Login</button>

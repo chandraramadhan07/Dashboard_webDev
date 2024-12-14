@@ -1,44 +1,45 @@
 <?php
-include ("database/database.php");
+include "database/database.php";
 session_start();
-$limit_baris = 3;
+// PAGGINATION
+include "php/paggination.php";
 
-// JUMLAH PRODUK MASUK
-$sql_jumlah_masuk = "SELECT SUM(jumlah_masuk) as total_masuk FROM produk_masuk";
-$result_jumlah_masuk = mysqli_query($db, $sql_jumlah_masuk);
-if ($result_jumlah_masuk) {
-  $jumlah = mysqli_fetch_assoc($result_jumlah_masuk);
-  $jumlah_masuk = $jumlah['total_masuk'];
+$sql_view_keluar = "SELECT 
+                  produk.id_produk, 
+                  produk.nama_produk,
+                  produk.stok,
+                  produk_keluar.jumlah_keluar, 
+                  produk_keluar.created_at 
+                  FROM produk_keluar 
+                  INNER JOIN produk 
+                  ON produk_keluar.id_produk = produk.id_produk ORDER BY created_at DESC LIMIT $limit_baris OFFSET $offset";
+
+$result_view_keluar = mysqli_query($db, $sql_view_keluar);
+
+// SELECT keluar STOK
+$sql_keluar_stok = "SELECT id_produk, nama_produk, stok FROM produk";
+$result_keluar_stok = mysqli_query($db, $sql_keluar_stok);
+
+// keluar STOK
+if (isset($_POST['keluar'])) {
+  $id_produk = $_POST['id_produk'];
+  $jumlah_stok = $_POST['keluar_stok'];
+  $sql_nama_produk = "SELECT nama_produk FROM produk WHERE id_produk = '$id_produk'";
+  $result_nama_produk = mysqli_query($db, $sql_nama_produk);
+
+  if ($selected_produk = mysqli_fetch_assoc($result_nama_produk)) {
+    $nama_produk = $selected_produk['nama_produk'];
+    $sql_keluar = "INSERT INTO produk_keluar (id_produk, jumlah_keluar, created_at) 
+                   VALUES ('$id_produk', '$jumlah_stok', NOW())";
+    $result_keluar = mysqli_query($db, $sql_keluar);
+
+    // keluar STOK DI TB. PRODUK
+    $sql_update_produk = "UPDATE produk SET stok = stok - '$jumlah_stok' WHERE id_produk = '$id_produk'";
+    if ($result_update_produk = mysqli_query($db, $sql_update_produk)) {
+      header('location: barangKeluar.php');
+    }
+  }
 }
-
-// TABEL PRODUK KELUAR
-$sql_jumlah_keluar = "SELECT SUM(jumlah_keluar) AS total_keluar FROM produk_keluar;";
-$result_jumlah_keluar = mysqli_query($db, $sql_jumlah_keluar);
-if ($result_jumlah_keluar) {
-  $jumlah = mysqli_fetch_assoc($result_jumlah_keluar);
-  $jumlah_keluar = $jumlah['total_keluar'];
-}
-
-// TABEL PRODUK LABA
-$sql_jumlah_laba = "SELECT SUM(laba) as laba FROM produk";
-$result_jumlah_laba = mysqli_query($db, $sql_jumlah_laba);
-if ($result_jumlah_laba) {
-  $jumlah = mysqli_fetch_assoc($result_jumlah_laba);
-  $jumlah_laba = $jumlah['laba'];
-}
-
-// TABEL PRODUK keluar
-$sql_jumlah_keluar = "SELECT * FROM produk_keluar";
-$result_jumlah_keluar = mysqli_query($db, $sql_jumlah_keluar);
-$jumlah_keluar = mysqli_num_rows($result_jumlah_keluar);
-
-// PRODUK MASUK
-$sql_produk_masuk = "SELECT produk.nama_produk, produk_masuk.jumlah_masuk FROM produk_masuk INNER JOIN produk ON produk_masuk.id_produk = produk.id_produk ORDER BY created_at DESC LIMIT $limit_baris";
-$result_produk_masuk = mysqli_query($db, $sql_produk_masuk);
-
-// PRODUK KELUAR
-$sql_produk_keluar = "SELECT produk.nama_produk, produk_keluar.jumlah_keluar FROM produk_keluar INNER JOIN produk ON produk_keluar.id_produk = produk.id_produk ORDER BY created_at DESC LIMIT $limit_baris";
-$result_produk_keluar = mysqli_query($db, $sql_produk_keluar);
 ?>
 
 <!DOCTYPE html>
@@ -64,9 +65,9 @@ $result_produk_keluar = mysqli_query($db, $sql_produk_keluar);
         </div>
         <div class="list-group mt-3">
         <a href="" class="close-btn p-1"><i class="bi bi-x-lg text-white fs-5 mx-2"></i></a>
-          <a href="dashboard.php" class="menu dashboard-aside position-relative text-decoration-none mt-4 p-1 mx-2 rounded" aria-current="true"><i class="bi bi-house-fill fs-5 mx-2"></i><span class="position-absolute">Dashboard</span></a>
+          <a href="dashboard.php" class="menu position-relative text-decoration-none mt-4 p-1 mx-2 rounded" aria-current="true"><i class="bi bi-house-fill fs-5 mx-2"></i><span class="position-absolute">Dashboard</span></a>
           <a href="manageData.php" class="menu text-decoration-none mt-4 p-1 mx-2 rounded" aria-current="true"><i class="bi bi-dropbox fs-5 mx-2"></i><span class="position-absolute">Manage Data</span></a>
-          <a class="menu nav-link position-relative text-decoration-none mt-4 p-1 mx-2 rounded text-white" data-bs-toggle="collapse" href="#kelolaProduk" role="button" aria-expanded="false" aria-controls="kelolaProduk">
+          <a class="menu kelolastok-aside nav-link position-relative text-decoration-none mt-4 p-1 mx-2 rounded text-white" data-bs-toggle="collapse" href="#kelolaProduk" role="button" aria-expanded="false" aria-controls="kelolaProduk">
           <i class="bi bi-box-seam-fill fs-5 mx-2"></i><span class="position-absolute">Kelola Stok<i class="bi ms-2 bi-caret-down-fill"></i>
           </span>
           </a>
@@ -84,7 +85,7 @@ $result_produk_keluar = mysqli_query($db, $sql_produk_keluar);
       </aside>
 
       <div class="content container-fluid">
-        <nav class="navbar px-4 ">
+      <nav class="navbar px-4 ">
           <div class="container-fluid position-relative d-flex align-items-center">
             <div class="header d-flex align-items-center">
               <i id="hamburger-menu" class="bi bi-list mx-2" style="font-size: 2rem"></i>
@@ -137,105 +138,45 @@ $result_produk_keluar = mysqli_query($db, $sql_produk_keluar);
 
         <div class="main-content position-absolute mt-5">
           <div class="container-fluid px-5 pt-4 py-5">
-            <h2 class="mb-3">Dashboard</h2>
+            <h2 class="mb-3">Barang Keluar</h2>
             <div id="setion-dashboard" class="d-flex gap-4 flex-wrap">
-              <div class="info-stok d-flex gap-4 col">
-                <div class="card cards shadow-sm border-0 col">
+            <div class="card cards shadow-sm border-0 col-md-12">
                   <div class="card-body">
-                    <h6 class="card-subtitle mb-2">Barang Masuk</h6>
-                    <div class="data d-flex justify-content-between">
-                      <img src="asset/open-box.png" class="object-fit-contain" style="width: 70px" />
-                      <h2 class="card-title mt-3"><?= $jumlah_masuk ?></h2>
-                    </div>
-                  </div>
-                </div>
-                <div class="card cards shadow-sm border-0 col">
-                  <div class="card-body">
-                    <h6 class="card-subtitle mb-2 ">Barang Keluar</h6>
-                    <div class="data d-flex justify-content-between">
-                      <img src="asset/return-box.png" class="object-fit-contain" style="width: 70px" />
-                      <h2 class="card-title mt-3"><?= $jumlah_keluar ?></h2>
-                    </div>
-                  </div>
-                </div>
-                <div class="card cards shadow-sm border-0 col">
-                  <div class="card-body">
-                    <h6 class="card-subtitle mb-2 ">Laba</h6>
-                    <div class="data d-flex justify-content-between">
-                      <img src="asset/return-box.png" class="object-fit-contain" style="width: 70px" />
-                      <h2 class="card-title mt-3">Rp <?= number_format("$jumlah_laba", 2, ",", ".") ?></h2>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="row gap-4">
-                <div class="data-stok d-flex gap-4">
-                  <div class="card cards shadow-sm border-0 col">
-                    <div class="card-body">
-                      <h5 class="card-title">Barang Masuk</h5>
-                      <div class="mt-3 d-flex justify-content-between gap-3">
-                          <table class="table">
-                            <thead>
-                              <tr>
-                                <th>No</th>
-                                <th>Nama Produk</th>
-                                <th>Jumlah</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                            <?php
-                            $no = 1;
-                            while($masuk = mysqli_fetch_array($result_produk_masuk)):
-                            ?>
+                    <h5 class="card-title m-0">Data Produk</h5>
+                    <button data-bs-toggle="modal" data-bs-target="#exampleModal" class="d-inline-block text-decoration-none p-2 bg-primary text-white rounded my-3" >Stok Keluar</button>
+                    <div class="table-responsive">
+                      <table class="table table-bordered border-secondary px-2">
+                        <thead>
+                          <tr>
+                            <th style="width: 30px;">No</th>
+                            <th>Kode Produk</th>
+                            <th>Nama Produk</th>
+                            <th>Jumlah</th>
+                            <th>Tanggal</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                        <?php
+                          $no = 1;
+                          while ($data = mysqli_fetch_array($result_view_keluar)):
+                          ?>
                               <tr>
                                 <th><?=$no++?></th>
-                                <td><?= $masuk['nama_produk'] ?></td>
-                                <td><?= $masuk['jumlah_masuk'] ?></td>
+                                <th><?=$data['id_produk']?></th>
+                                <th><?=$data['nama_produk']?></th>
+                                <th><?=$data['jumlah_keluar']?></th>
+                                <th><?=$data['created_at']?></th>
                               </tr>
-                              <?php endwhile; ?>
                             </tbody>
-                          </table>
-                      </div>
+                          <?php endwhile ?>
+                      </table>
                     </div>
-                  </div>
-
-                  <div class="card cards shadow-sm border-0 col">
-                    <div class="card-body">
-                      <h5 class="card-title">Barang Keluar</h5>
-                      <div class="mt-3 d-flex justify-content-between gap-3">
-                          <table class="table table-hover rounded-2">
-                            <thead>
-                              <tr>
-                                <th>No</th>
-                                <th>Nama Produk</th>
-                                <th>Jumlah</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                            <?php
-                            $no = 1;
-                            while($keluar = mysqli_fetch_array($result_produk_keluar)):
-                            ?>
-                              <tr>
-                                <th><?=$no++?></th>
-                                <td><?= $keluar['nama_produk'] ?></td>
-                                <td><?= $keluar['jumlah_keluar'] ?></td>
-                              </tr>
-                              <?php endwhile; ?>
-                            </tbody>
-                          </table>
-                      </div>
+                    <div class="change-page d-flex gap-2 align-items-center justify-content-center">
+                      <a href="" class="p-1 d-flex align-items-center justify-content-center fw-semibold bg-primary text-decoration-none text-white rounded" style="width: 35px; height: 35px">1</a>
+                      <a href="" class="p-1 d-flex align-items-center justify-content-center fw-semibold text-decoration-none text-dark rounded" style="width: 35px; height: 35px; background-color: var(--hover)">2</a>
                     </div>
                   </div>
                 </div>
-
-                <div class="chart d-flexm-0 col">
-                  <div class="card cards shadow-sm border-0 px-2 col">
-                    <canvas id="cookieChart" width=100%></canvas>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -250,3 +191,37 @@ $result_produk_keluar = mysqli_query($db, $sql_produk_keluar);
     <script src="chart.js"></script>
   </body>
 </html>
+
+
+<!-- Modal ADD DATA -->
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="exampleModalLabel">Catat Barang Keluar</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <!-- FORM ADD DATA -->
+          <form method="POST" class="w-100 h-100 p-4 d-flex flex-column rounded-3 justify-content-center">
+              <select class="mb-3" name="id_produk">
+                <?php while ($select = mysqli_fetch_array($result_keluar_stok)):?>
+                <option value="<?= $select['id_produk'] ?>"><?= $select['nama_produk'] ?></option>
+                <?php endwhile ?>
+              </select>
+              
+              <div class="mb-3">
+                <input type="number" name="keluar_stok" placeholder="Stok Awal" class="form-control" id="" required />
+              </div>
+              
+            <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <!-- *Button name=submit nabrak sama type=button -->
+            <button name="keluar" class="btn btn-primary">Add changes</button>
+          </div>
+          <!-- *PENEMPATAN FORM (gak bisa di submit jika button tidak didalam tag form) -->
+        </form>
+        </div>
+    </div>
+        
+  </div>

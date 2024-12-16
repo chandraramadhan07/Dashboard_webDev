@@ -1,6 +1,6 @@
 <?php
-include 'database/database.php';
 session_start();
+include 'database/database.php';
 
 if (!isset($_SESSION['username'])) {
   header('location: index.php');
@@ -15,8 +15,15 @@ if ($_SESSION['role'] !== 'admin') {
   exit();
 }
 
-// PAGGINATION
-include "php/paggination.php";
+$limit_baris = 10;
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$offset = ($page - 1) * $limit_baris;
+$sql_total = "SELECT COUNT(*) as total_produk FROM produk";
+$result_total = mysqli_query($db, $sql_total);
+$total_baris = mysqli_fetch_assoc($result_total);
+$total_data = $total_baris['total_produk'];
+$total_page = ceil($total_data / $limit_baris);
+
 
 // ADD DATA
 if (isset($_POST['submit'])) {
@@ -42,8 +49,8 @@ if (isset($_POST['submit'])) {
       $sql_masuk = "INSERT INTO produk_masuk (id_produk, jumlah_masuk, created_at) VALUES ('$kode_produk', '$stok', NOW())";
       $result_masuk = mysqli_query($db, $sql_masuk);
       // ALERT BERHASIL, BELUM BERFUNGSI
-      echo "<script>alert('Produk Berhasil Ditambah')</script>";
       header('Location: manageData.php');
+      echo "<script>alert('Produk Berhasil Ditambah')</script>";
       
       exit;
     }
@@ -92,15 +99,16 @@ if (isset($_POST['delete'])) {
   </head>
   <body>
     <div class="d-flex main">
-      <aside id="sidebar" class="sidebar pt-2">
-        <div class="d-flex align-items-center justify-content-center">
-          <span class="d-flex logo align-items-center justify-content-center my-3" style="color: var(--icon)">Logo</span>
+      <aside id="sidebar" class="sidebar cards pt-2">
+        <div class="list-group mt-3">
+        <a href="" class="close-btn p-1"><i class="bi bi-x-lg text-white fs-5 mx-2"></i></a>
+        <div class="d-flex mb-4 align-items-center">
+          <img src="asset/logo-img.png" class="logo-image mt-4 p-1 mx-3" alt="">
+          <span class="logo fs-5 position-absolute my-3" style="color: var(--icon)">Gudang Budi</span>
         </div>
         <div class="position-relative">
           <button id="arrow-button" class="arrow position-absolute border-0 shadow-lg d-flex align-items-center justify-content-center rounded-5"><i class="bi bi-arrow-right"></i></button>
         </div>
-        <div class="list-group mt-3">
-        <a href="" class="close-btn p-1"><i class="bi bi-x-lg text-white fs-5 mx-2"></i></a>
           <a href="dashboard.php" class="menu text-decoration-none mt-4 p-1 mx-2 rounded" aria-current="true"><i class="bi bi-house-fill fs-5 mx-2"></i><span class="position-absolute">Dashboard</span></a>
           <a href="manageData.php" class="menu managedata-aside text-decoration-none mt-4 p-1 mx-2 rounded" aria-current="true"><i class="bi bi-dropbox fs-5 mx-2"></i><span class="position-absolute">Manage Data</span></a>
           <a class="menu nav-link position-relative text-decoration-none mt-4 p-1 mx-2 rounded text-white" data-bs-toggle="collapse" href="#kelolaProduk" role="button" aria-expanded="false" aria-controls="kelolaProduk">
@@ -108,14 +116,14 @@ if (isset($_POST['delete'])) {
           </span>
           </a>
           <div class="kelolastok-dropdown collapse" id="kelolaProduk">
-            <ul class="list-unstyled ps-3 d-flex flex-column gap-2">
-              <li class="d-flex align-items-center my-2" style="margin-left: 2rem;"><a href="barangMasuk.php" class="menu me-2 p-1 nav-link text-white rounded">Barang Masuk</a></li>
-              <li class="d-flex align-items-center" style="margin-left: 2rem;"><a href="barangKeluar.php" class="menu me-2 p-1 nav-link text-white rounded">Barang Keluar</a></li>
+            <ul class="list-unstyled d-flex align-items-center flex-column gap-2">
+              <li class="d-flex align-items-center my-2"><a href="barangMasuk.php" class="menu d-flex p-1 nav-link text-white rounded"><svg class="icon-dropdown"version='1.1'id='Layer_1' xmlns='http://www.w3.org/2000/svg'xmlns:xlink='http://www.w3.org/1999/xlink' x='0px' y='0px'viewBox='0 0 122.88 94.45'style='enable-background: new 0 0 122.88 94.45'xml:space='preserve'width='20'height='20'fill='white'><g><path class='st0'd='M0,41.16h24.83v44.18H0V41.16L0,41.16z M36,11.76L71.01,0.1c0.42-0.14,0.86-0.13,1.24,0.01V0.1l35.47,12.15 c0.87,0.3,1.4,1.14,1.32,2.02c0.01,0.04,0.01,0.09,0.01,0.14v37.04l1.56-0.77c9.6-3.16,16.43,6.88,9.35,13.87 c-13.9,10.11-28.15,18.43-42.73,25.15c-10.59,6.44-21.18,6.22-31.76,0l-15.63-8.07V44.71h4.48V13.7 C34.31,12.71,35.04,11.89,36,11.76L36,11.76z M46.44,44.71c7.04,1.26,14.08,5.08,21.12,9.51h1.47V33.88L38.97,21.05v23.66H46.44 L46.44,44.71z M74.43,54.22h6.04c5.84,0.35,8.9,6.27,3.22,10.16c-2.67,1.96-5.84,2.7-9.26,2.86v4.89 C80.83,71.77,86.1,70,89.49,64.7l1.93-4.51l12.97-6.43V20.78L74.43,33.9V54.22L74.43,54.22z M69.04,67.12 c-0.65-0.05-1.31-0.1-1.96-0.16c-4.22-0.21-4.4,5.46,0,5.48c0.64,0.05,1.3,0.02,1.96-0.04v-1.5V67.12L69.04,67.12z M71.6,5.49 l-29.82,9.94l29.96,13.59l29.97-13.21L71.6,5.49L71.6,5.49z'/></g></svg><p class="submenu-dropdown m-0">Barang Masuk</p></a></li>
+              <li class="d-flex align-items-center"><a href="barangKeluar.php" class="menu p-1 d-flex nav-link text-white rounded"><svg class="icon-dropdown" fill="white" width='20' height='20' xmlns="http://www.w3.org/2000/svg" shape-rendering="geometricPrecision" text-rendering="geometricPrecision" image-rendering="optimizeQuality" fill-rule="evenodd" clip-rule="evenodd" viewBox="0 0 505 511.5"><path d="m336.11 39.84-115.38 68.94 135.38 18.4 111.32-69.44-131.32-17.9zm25.45 204.61c73.74 0 133.53 59.78 133.53 133.53 0 73.74-59.79 133.52-133.53 133.52-73.75 0-133.53-59.78-133.53-133.52 0-73.75 59.78-133.53 133.53-133.53zm-50.44 179.72 15.51-78.82 15.73 23.69c33.86-13.59 52.88-36 55.7-70.5 27.82 48.63 10.93 92.22-24.33 117.77l16.05 24.16-78.65-16.3h-.01zM204.83 126.13l-.09 141.71-51.45-35.04-51.46 29.07 6.1-148.91-88.54-12.03v312.98l178.95 23.13c2.52 7.1 5.47 13.99 8.85 20.63L9.3 432.07c-5.17-.2-9.3-4.47-9.3-9.68V89.86c.27-4.05 1.89-6.89 5.72-8.81L182.48.85c1.58-.72 3.52-1.01 5.25-.77l308.18 42.04c5.09.59 8.58 4.77 8.58 9.99v.02L505 280.9c-5.72-8.46-15.57-20.29-19.93-27.77V69.56l-115.81 74.93v59.81a174.846 174.846 0 0 0-19.39.36v-58.82l-145.04-19.71zm-81.52-30.58 112.17-69.44-47.58-6.49L44.24 84.8l79.07 10.75z"/></svg><p class="submenu-dropdown m-0">Barang Keluar</p></a></li>
             </ul>
           </div>
           <a href="laporan.php" class="menu text-decoration-none mt-4 p-1 mx-2 rounded" aria-current="true"><i class="bi bi-file-earmark-text-fill fs-5 mx-2"></i><span class="position-absolute">Laporan</span></a>
           <a href="logout.php" class="logout d-flex align-items-center text-decoration-none text-danger position-absolute mt-4 p-1 mx-2" aria-current="true"
-            ><i class="bi bi-box-arrow-in-left fs-5 mx-2"></i><span class="=position-absolute">Logout</span></a
+            ><i class="bi bi-box-arrow-in-left fs-5 mx-2"></i><span>Logout</span></a
           >
         </div>
       </aside>
@@ -126,7 +134,7 @@ if (isset($_POST['delete'])) {
           <div class="header d-flex align-items-center ">
               <i id="hamburger-menu" class="bi bi-list mx-2" style="font-size: 2rem"></i>
               <div class="header-nav">
-              <p class="fs-4 m-0 text-decoration-none fw-semibold" >Hallo, Admin!</p>
+              <p class="fs-4 m-0 text-decoration-none fw-semibold" >Hello, Admin!</p>
               <p class="d-flex m-0">May your day always be right</p>
               </div>
             </div>
@@ -151,15 +159,14 @@ if (isset($_POST['delete'])) {
             </div>
 
             <div id="popup" class="popup cards position-absolute rounded shadow-lg">
-              <div class="user-profil p-4 pb-0">
+              <div class="user-profil p-4">
                 <div class="user-info d-flex align-items-center justify-content-center">
                   <img src="asset/user.png" class="w-50 mb-3" alt="" />
                   <h2>Budi</h2>
                 </div>
                 <div class="m-auto border-bottom border-1 border-black border-dark-subtle"></div>
-                <div class="user d-flex flex-column align-items-center justify-content-center mt-2">
+                <div class="user d-flex align-items-center justify-content-center my-2">
                   <span class="fs-4 ">Admin</span>
-                  
                 </div>
                 <div class="logout-profil ">
                   <div class="m-auto border-bottom border-1 border-black border-dark-subtle"></div>
@@ -175,54 +182,55 @@ if (isset($_POST['delete'])) {
         <div class="main-content position-absolute mt-5">
           <div class="container-fluid px-5 pt-4 py-5">
             <h2 class="mb-3">Kelola Produk</h2>
-            <div class="flex-wrap container-fluid">
-                <div class="card cards shadow-sm border-0 col-md-12">
-                  <div class="card-body">
-                    <h5 class="card-title m-0">Data Produk</h5>
-                    <a href="" data-bs-toggle="modal" data-bs-target="#exampleModal" class="d-inline-block text-decoration-none p-2 bg-primary text-white rounded my-3" >Add Data</a>
-                    <div class="table-responsive">
-                    <table class="table table-bordered border-secondary px-2">
-                        <thead>
-                          <tr>
-                            <th style="width: 30px;">No</th>
-                            <th>Kode Produk</th>
-                            <th>Nama Produk</th>
-                            <th>Kategori</th>
-                            <th>Stok</th>
-                            <th>Harga Beli</th>
-                            <th>Harga Jual</th>
-                            <th>Laba</th>
-                            <th>Aksi</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                        <?php
-                          $no = $offset+1;
-                          while($data = mysqli_fetch_array($result_read_data)):
-                        ?>
+            <div class="card cards shadow-sm border-0 col-md-12">
+              <div class="card-body">
+                <h5 class="card-title m-0">Data Produk</h5>
+                <a href="" data-bs-toggle="modal" data-bs-target="#exampleModal" class="d-inline-block text-decoration-none p-2 bg-primary text-white rounded my-3">
+                  Add Data
+                </a>
+                <div class="table-responsive">
+                  <table class="table table-bordered border-secondary px-2">
+                    <thead>
+                      <tr>
+                        <th style="width: 30px;">No</th>
+                        <th>Kode Produk</th>
+                        <th>Nama Produk</th>
+                        <th>Kategori</th>
+                        <th>Stok</th>
+                        <th>Harga Beli</th>
+                        <th>Harga Jual</th>
+                        <th>Laba</th>
+                        <th>Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <?php
+                        $no = $offset + 1;
+                        while($data = mysqli_fetch_array($result_read_data)):
+                      ?>
                         <tr>
-                            <td><?= $no++; ?></td>
-                            <td><?= $data['id_produk']; ?></td>
-                            <td><?= $data['nama_produk']; ?></td>
-                            <td><?= $data['nama_kategori']; ?></td>
-                            <td><?= $data['stok']; ?></td>
-                            <td>Rp <?=number_format($data['harga_beli'], 2, ",", ".");?></td>
-                            <td>Rp <?=number_format($data['harga_jual'], 2, ",", ".");?></td>
-                            <td>Rp <?=number_format($data['laba'], 2, ",", ".");?></td>
-                            <td>
-                              <div class="d-flex gap-2">
-                                <a data-bs-toggle="modal" data-bs-target="#edit<?= $no ?>" class="fs-5 text-white d-flex align-items-center justify-content-center bg-primary rounded" style="width: 30px; height: 30px"
-                                ><i class="bi bi-pencil-square"></i
-                                ></a>
-                                <a data-bs-toggle="modal" data-bs-target="#delete<?= $no ?>" class="fs-5 text-white d-flex align-items-center justify-content-center bg-danger rounded" style="width: 30px; height: 30px"
-                                ><i class="bi bi-trash"></i
-                                ></a>
-                              </div>
-                            </td>
+                          <td><?= $no++; ?></td>
+                          <td><?= $data['id_produk']; ?></td>
+                          <td><?= $data['nama_produk']; ?></td>
+                          <td><?= $data['nama_kategori']; ?></td>
+                          <td><?= $data['stok']; ?></td>
+                          <td>Rp <?= number_format($data['harga_beli'], 2, ",", "."); ?></td>
+                          <td>Rp <?= number_format($data['harga_jual'], 2, ",", "."); ?></td>
+                          <td>Rp <?= number_format($data['laba'], 2, ",", "."); ?></td>
+                          <td>
+                            <div class="d-flex gap-2">
+                              <a data-bs-toggle="modal" data-bs-target="#edit<?= $no; ?>" class="fs-5 text-white d-flex align-items-center justify-content-center bg-primary rounded" style="width: 30px; height: 30px">
+                                <i class="bi bi-pencil-square"></i>
+                              </a>
+                              <a data-bs-toggle="modal" data-bs-target="#delete<?= $no; ?>" class="fs-5 text-white d-flex align-items-center justify-content-center bg-danger rounded" style="width: 30px; height: 30px">
+                                <i class="bi bi-trash"></i>
+                              </a>
+                            </div>
+                          </td>
                         </tr>
-                        </tbody>
-                        
-                        <!-- Modal Edit -->
+                      </tbody>
+
+                      <!-- Modal Edit -->
                       <div class="modal fade" id="edit<?= $no; ?>" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
                         <div class="modal-dialog">
                           <div class="modal-content">
@@ -231,66 +239,69 @@ if (isset($_POST['delete'])) {
                               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                             </div>
                             <div class="modal-body">
-                              <form method="POST" class="w-100 h-50 p-4 d-flex flex-column rounded-3 justify-content-center">
-                              <input type="hidden" name="kode_produk" value="<?= $data['id_produk']; ?>">
-                              
+                              <form method="POST" class="flex-column rounded-3 justify-content-center">
+                                <input type="hidden" name="kode_produk" value="<?= $data['id_produk']; ?>">
+
                                 <div class="mb-3">
-                                <label class="form-label">Nama Produk</label>
-                                    <input type="text" value="<?= $data['nama_produk']; ?>" name="nama_produk" placeholder="Nama Produk" class="form-control" id="" aria-describedby="emailHelp" />
+                                  <label class="form-label">Nama Produk</label>
+                                  <input type="text" value="<?= $data['nama_produk']; ?>" name="nama_produk" placeholder="Nama Produk" class="form-control" />
+                                </div>
+
+                                <div class="mb-3">
+                                  <label class="form-label">Kategori</label>
+                                  <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="kategori" id="kategori1" value="1" required <?= $data['nama_kategori'] === 'Makanan' ? 'checked' : '' ?> />
+                                    <label class="form-check-label" for="kategori1">Makanan</label>
                                   </div>
-                                  <div class="mb-3">
-                                    <label class="form-label">Kategori</label>
-                                    <div class="form-check">
-                                      <input class="form-check-input" type="radio" name="kategori" id="kategori1" value="1" required  <?= $data['nama_kategori'] === 'Makananan' ? 'checked' : '' ?> />
-                                      <label class="form-check-label" for="kategori1">Makanan</label>
-                                    </div>
-                                    <div class="form-check">
-                                      <input class="form-check-input" type="radio" name="kategori" id="kategori2" value="2" required <?= $data['nama_kategori'] === 'Minuman' ? 'checked' : '' ?> />
-                                      <label class="form-check-label" for="kategori2">Minuman</label>
-                                    </div>
-                                    <div class="form-check">
-                                      <input class="form-check-input" type="radio" name="kategori" id="kategori3" value="3" required <?= $data['nama_kategori'] === 'Elektronik' ? 'checked' : '' ?> />
-                                      <label class="form-check-label" for="kategori3">Elektronik</label>
-                                    </div>
-                                    <div class="form-check">
-                                      <input class="form-check-input" type="radio" name="kategori" id="kategori4" value="4" required <?= $data['nama_kategori'] === 'Peralatan Masak' ? 'checked' : '' ?> />
-                                      <label class="form-check-label" for="kategori3">Peralatan Masak</label>
-                                    </div>
-                                    <div class="form-check">
-                                      <input class="form-check-input" type="radio" name="kategori" id="kategori5" value="5" required <?= $data['nama_kategori'] === 'Bumbu' ? 'checked' : '' ?> />
-                                      <label class="form-check-label" for="kategori3">Bumbu</label>
-                                    </div>
-                                    <div class="form-check">
-                                      <input class="form-check-input" type="radio" name="kategori" id="kategori6" value="6" required <?= $data['nama_kategori'] === 'Obat' ? 'checked' : '' ?> />
-                                      <label class="form-check-label" for="kategori3">Obat</label>
-                                    </div>
+                                  <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="kategori" id="kategori2" value="2" required <?= $data['nama_kategori'] === 'Minuman' ? 'checked' : '' ?> />
+                                    <label class="form-check-label" for="kategori2">Minuman</label>
                                   </div>
-                                  <div class="mb-3">
-                                    <label class="form-label">Stok Produk</label>
-                                    <input type="number" value="<?= $data['stok']; ?>" name="stok" placeholder="Stok" min="0" class="form-control" />
+                                  <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="kategori" id="kategori3" value="3" required <?= $data['nama_kategori'] === 'Elektronik' ? 'checked' : '' ?> />
+                                    <label class="form-check-label" for="kategori3">Elektronik</label>
                                   </div>
-                                  <div class="mb-3">
-                                    <label class="form-label">Harga beli</label>
-                                    <input type="number" value="<?= $data['harga_beli']; ?>" name="harga_beli" placeholder="Harga Beli" class="form-control" />
+                                  <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="kategori" id="kategori4" value="4" required <?= $data['nama_kategori'] === 'Peralatan Masak' ? 'checked' : '' ?> />
+                                    <label class="form-check-label" for="kategori3">Peralatan Masak</label>
                                   </div>
-                                  <div class="mb-3">
-                                    <label class="form-label">Harga jual</label>
-                                    <input type="number" value="<?= $data['harga_jual']; ?>" name="harga_jual" placeholder="Harga Jual" class="form-control" />
+                                  <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="kategori" id="kategori5" value="5" required <?= $data['nama_kategori'] === 'Bumbu' ? 'checked' : '' ?> />
+                                    <label class="form-check-label" for="kategori3">Bumbu</label>
                                   </div>
-                              
-                                  <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                    <!-- *name=save nabrak dengan type=button -->
-                                    <button type="submit" name="save" class="btn btn-primary">Save changes</button>
-                                  <!-- *PENEMPATAN FORM (gak bisa di klik jika button tidak didalam tag form) -->  
+                                  <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="kategori" id="kategori6" value="6" required <?= $data['nama_kategori'] === 'Obat' ? 'checked' : '' ?> />
+                                    <label class="form-check-label" for="kategori3">Obat</label>
+                                  </div>
+                                </div>
+
+                                <div class="mb-3">
+                                  <label class="form-label">Stok Produk</label>
+                                  <input type="number" value="<?= $data['stok']; ?>" name="stok" placeholder="Stok" min="0" class="form-control" />
+                                </div>
+
+                                <div class="mb-3">
+                                  <label class="form-label">Harga beli</label>
+                                  <input type="number" value="<?= $data['harga_beli']; ?>" name="harga_beli" placeholder="Harga Beli" class="form-control" />
+                                </div>
+
+                                <div class="mb-3">
+                                  <label class="form-label">Harga jual</label>
+                                  <input type="number" value="<?= $data['harga_jual']; ?>" name="harga_jual" placeholder="Harga Jual" class="form-control" />
+                                </div>
+
+                                <div class="modal-footer">
+                                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                  <button type="submit" name="save" class="btn btn-primary">Save changes</button>
                                 </div>
                               </form>
                             </div>
                           </div>
                         </div>
                       </div>
-                          <!-- Modal Delete -->
-                          <div class="modal fade" id="delete<?= $no ?>" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+
+                       <!-- Modal Delete -->
+                       <div class="modal fade" id="delete<?= $no ?>" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
                             <div class="modal-dialog">
                               <div class="modal-content">
                                 <div class="modal-header">
@@ -298,7 +309,7 @@ if (isset($_POST['delete'])) {
                                   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                 </div>
                                 <div class="modal-body">
-                                  <form method="POST" class="w-100 h-50 p-4 d-flex flex-column rounded-3 justify-content-center">
+                                  <form method="POST" class="-flex flex-column rounded-3 justify-content-center">
                                     <p class="fw-semibold">Apakah anda yakin ingin menghapus <span class="text-danger"><?=$data['id_produk']?> - <?=$data['nama_produk'];?></span> dari gudang?</p>
                                     <div class="modal-footer">
                                       <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -312,28 +323,30 @@ if (isset($_POST['delete'])) {
                               </div>
                             </div>
                           </div>
-                          <?php endwhile; ?>
-                      </table>
-                    </div>
-                    <div class="change-page d-flex gap-2 align-items-center justify-content-center">
-                      <?php for($i = 1; $i <= $total_page; $i++): ?>
-                    <a href="?page=<?= $i ?>" class="p-1 d-flex align-items-center justify-content-center fw-semibold  text-decoration-none rounded <?= $i == $page? 'bg-primary text-white':'bg-secondary text-white'?>" style="width: 35px; height: 35px"><?= $i ?></a>
-                      <?php endfor ?>
-                    </div>
-                  </div>
+
+                    <?php endwhile; ?>
+                  </table>
                 </div>
+
+                <div class="change-page d-flex gap-2 align-items-center justify-content-center">
+                  <?php for($i = 1; $i <= $total_page; $i++): ?>
+                  <a href="?page=<?= $i ?>" class="p-1 d-flex align-items-center justify-content-center fw-semibold  text-decoration-none rounded <?= $i == $page? 'bg-primary text-white':'bg-secondary text-white'?>" style="width: 35px; height: 35px"><?= $i ?></a>
+                  <?php endfor ?>
+                </div>
+              </div>
             </div>
           </div>
         </div>
+
       </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <script src="script.js"></script>
   </body>
-
   <!-- Modal ADD DATA -->
-  <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+   <!-- Modal ADD DATA -->
+   <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
@@ -397,6 +410,4 @@ if (isset($_POST['delete'])) {
     </div>
         
   </div>
-
-  
 </html>

@@ -52,6 +52,6 @@ mobileDarkToggle.addEventListener("click", (e) => {
 mobileLightToggle.addEventListener("click", (e) => {
   e.preventDefault();
   document.body.classList.remove("dark-mode");
-  navbar.classList.add("dark-mode");
+  navbar.classList.remove("dark-mode");
   cards.forEach((card) => card.classList.remove("dark-mode"));
 });

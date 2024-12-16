@@ -3,6 +3,14 @@ session_start();
 include "database/database.php";
 include "php/paggination.php";
 
+if (!isset($_SESSION['username'])) {
+  header('location: index.php');
+  exit();
+}
+
+$admin = $_SESSION['role'] === 'admin';
+
+
 $sql_laporan = "SELECT 
                 produk.id_produk, 
                 produk.nama_produk, 
@@ -17,6 +25,22 @@ $sql_laporan = "SELECT
                 LEFT JOIN produk ON produk_masuk.id_produk = produk.id_produk
                 ORDER BY produk_masuk.created_at DESC";
 $result_laporan = mysqli_query($db, $sql_laporan);
+
+if (isset($_POST['search'])) {
+  $keyword = mysqli_real_escape_string($db, $_POST['keyword']);
+  $sql_laporan = src($keyword);
+  $result_laporan = mysqli_query($db, $sql_laporan);
+}
+
+function src($keyword) {
+  return "SELECT produk.nama_produk, produk_masuk.created_at, produk_keluar.created_at 
+          FROM produk_masuk 
+          LEFT JOIN produk ON produk_masuk.id_produk = produk.id_produk 
+          LEFT JOIN produk_keluar ON produk_masuk.id_produk = produk_keluar.id_produk 
+          WHERE produk.nama_produk LIKE '%$keyword%' 
+          OR produk_masuk.created_at LIKE '%$keyword%'
+          ORDER BY produk_masuk.created_at DESC";
+}
 ?>
 
 <!DOCTYPE html>
@@ -24,7 +48,7 @@ $result_laporan = mysqli_query($db, $sql_laporan);
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Dashboard - Admin</title>
+    <title>Dashboard - <?php if($admin) {echo "Admin";} else {echo "User";}?></title>
     <link rel="stylesheet" href="style.css" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous" />
@@ -41,8 +65,8 @@ $result_laporan = mysqli_query($db, $sql_laporan);
         <div class="list-group mt-3">
         <a  class="close-btn p-1"><i id="close-btn" class="bi bi-x-lg text-white fs-5 mx-2"></i></a>
           <a href="dashboard.php" class="menu text-decoration-none mt-4 p-1 mx-2 rounded" aria-current="true"><i class="bi bi-house-fill fs-5 mx-2"></i><span class="position-absolute">Dashboard</span></a>
-          <a href="manageData.php" class="menu text-decoration-none mt-4 p-1 mx-2 rounded" aria-current="true"><i class="bi bi-dropbox fs-5 mx-2"></i><span class="position-absolute">Manage Data</span></a>
-          <a class="menu nav-link position-relative text-decoration-none mt-4 p-1 mx-2 rounded text-white" data-bs-toggle="collapse" href="#kelolaProduk" role="button" aria-expanded="false" aria-controls="kelolaProduk">
+          <a href="manageData.php" class="<?php if(!$admin){echo "d-none";}?> menu text-decoration-none mt-4 p-1 mx-2 rounded" aria-current="true"><i class="bi bi-dropbox fs-5 mx-2"></i><span class="position-absolute">Manage Data</span></a>
+          <a class="<?php if(!$admin){echo "d-none";}?> menu nav-link position-relative text-decoration-none mt-4 p-1 mx-2 rounded text-white" data-bs-toggle="collapse" href="#kelolaProduk" role="button" aria-expanded="false" aria-controls="kelolaProduk">
           <i class="bi bi-box-seam-fill fs-5 mx-2"></i><span class="position-absolute">Kelola Stok<i class="bi ms-2 bi-caret-down-fill"></i>
           </span>
           </a>
@@ -65,7 +89,7 @@ $result_laporan = mysqli_query($db, $sql_laporan);
           <div class="header d-flex align-items-center ">
               <i id="hamburger-menu" class="bi bi-list mx-2" style="font-size: 2rem"></i>
               <div class="header-nav">
-              <p class="fs-4 m-0 text-decoration-none fw-semibold" >Hallo, Admin!</p>
+              <p class="fs-4 m-0 text-decoration-none fw-semibold" >Hello, <?php if($admin) {echo "Admin";} else {echo "User";}?>!</p>
               <p class="d-flex m-0">May your day always be right</p>
               </div>
             </div>
@@ -97,8 +121,8 @@ $result_laporan = mysqli_query($db, $sql_laporan);
                 </div>
                 <div class="m-auto border-bottom border-1 border-black border-dark-subtle"></div>
                 <div class="user d-flex flex-column align-items-center justify-content-center mt-2">
-                  <span class="fs-4 ">Admin</span>
-                  <p class="text-center"><?= date("l, jS F Y h:i:s A");?></p>
+                  <span class="fs-4 "><?php if($admin) {echo "Admin";} else {echo "User";}?></span>
+                  
                 </div>
                 <div class="logout-profil ">
                   <div class="m-auto border-bottom border-1 border-black border-dark-subtle"></div>
@@ -121,7 +145,7 @@ $result_laporan = mysqli_query($db, $sql_laporan);
                     <div class="input-group" style="height: 7px">
                         <input type="text" class="search form-control rounded-start-5 border-0" placeholder="Search" aria-label="Search" aria-describedby="search-icon">
                         <span class="search input-group-text rounded-end-5 border-0" id="search-icon">
-                        <i class=" bi bi-search"></i>
+                        <form method="POST"><button type="submit" name="search"><i class=" bi bi-search"></i></button></form>
                         </span>
                     </div>
                 </form>

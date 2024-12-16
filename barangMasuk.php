@@ -2,6 +2,19 @@
 include "database/database.php";
 session_start();
 
+if (!isset($_SESSION['username'])) {
+  header('location: index.php');
+  exit();
+}
+
+if ($_SESSION['role'] !== 'admin') {
+  echo "<script>
+        alert('Anda bukan admin. Anda tidak dapat mengakses halaman ini.');
+        window.location.href = 'dashboard.php';
+        </script>";
+  exit();
+}
+
 // PAGGINATION
 include "php/paggination.php";
 
@@ -124,7 +137,7 @@ if (isset($_POST['tambah'])) {
                 <div class="m-auto border-bottom border-1 border-black border-dark-subtle"></div>
                 <div class="user d-flex flex-column align-items-center justify-content-center mt-2">
                   <span class="fs-4 ">Admin</span>
-                  <p class="text-center"><?= date("l, jS F Y h:i:s A");?></p>
+                  
                 </div>
                 <div class="logout-profil ">
                   <div class="m-auto border-bottom border-1 border-black border-dark-subtle"></div>

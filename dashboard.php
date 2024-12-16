@@ -1,22 +1,30 @@
 <?php
 include ("database/database.php");
 session_start();
+
+if (!isset($_SESSION['username'])) {
+  header('location: index.php');
+  exit();
+}
+
+$admin = $_SESSION['role'] === 'admin';
+
 $limit_baris = 3;
 
 // JUMLAH PRODUK MASUK
 $sql_jumlah_masuk = "SELECT SUM(jumlah_masuk) as total_masuk FROM produk_masuk";
 $result_jumlah_masuk = mysqli_query($db, $sql_jumlah_masuk);
 if ($result_jumlah_masuk) {
-  $jumlah = mysqli_fetch_assoc($result_jumlah_masuk);
-  $jumlah_masuk = $jumlah['total_masuk'];
+  $jumlah_masuk = mysqli_fetch_assoc($result_jumlah_masuk);
+  $tampil_masuk = $jumlah_masuk['total_masuk'];
 }
 
 // TABEL PRODUK KELUAR
 $sql_jumlah_keluar = "SELECT SUM(jumlah_keluar) AS total_keluar FROM produk_keluar;";
 $result_jumlah_keluar = mysqli_query($db, $sql_jumlah_keluar);
 if ($result_jumlah_keluar) {
-  $jumlah = mysqli_fetch_assoc($result_jumlah_keluar);
-  $jumlah_keluar = $jumlah['total_keluar'];
+  $jumlah_keluar = mysqli_fetch_assoc($result_jumlah_keluar);
+  $tampil_keluar = $jumlah_keluar['total_keluar'];
 }
 
 // TABEL PRODUK LABA
@@ -46,7 +54,7 @@ $result_produk_keluar = mysqli_query($db, $sql_produk_keluar);
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Dashboard - Admin</title>
+    <title>Dashboard -  <?php if($admin) {echo "Admin";} else {echo "User";}?></title>
     <link rel="stylesheet" href="style.css" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.min.js">
@@ -65,8 +73,8 @@ $result_produk_keluar = mysqli_query($db, $sql_produk_keluar);
         <div class="list-group mt-3">
         <a href="" class="close-btn p-1"><i class="bi bi-x-lg text-white fs-5 mx-2"></i></a>
           <a href="dashboard.php" class="menu dashboard-aside position-relative text-decoration-none mt-4 p-1 mx-2 rounded" aria-current="true"><i class="bi bi-house-fill fs-5 mx-2"></i><span class="position-absolute">Dashboard</span></a>
-          <a href="manageData.php" class="menu text-decoration-none mt-4 p-1 mx-2 rounded" aria-current="true"><i class="bi bi-dropbox fs-5 mx-2"></i><span class="position-absolute">Manage Data</span></a>
-          <a class="menu nav-link position-relative text-decoration-none mt-4 p-1 mx-2 rounded text-white" data-bs-toggle="collapse" href="#kelolaProduk" role="button" aria-expanded="false" aria-controls="kelolaProduk">
+          <a href="manageData.php" class="<?php if(!$admin){echo "d-none";}?> menu text-decoration-none mt-4 p-1 mx-2 rounded" aria-current="true"><i class="bi bi-dropbox fs-5 mx-2"></i><span class="position-absolute">Manage Data</span></a>
+          <a class="<?php if(!$admin){echo "d-none";}?> menu nav-link position-relative text-decoration-none mt-4 p-1 mx-2 rounded text-white" data-bs-toggle="collapse" href="#kelolaProduk" role="button" aria-expanded="false" aria-controls="kelolaProduk">
           <i class="bi bi-box-seam-fill fs-5 mx-2"></i><span class="position-absolute">Kelola Stok<i class="bi ms-2 bi-caret-down-fill"></i>
           </span>
           </a>
@@ -89,7 +97,7 @@ $result_produk_keluar = mysqli_query($db, $sql_produk_keluar);
             <div class="header d-flex align-items-center">
               <i id="hamburger-menu" class="bi bi-list mx-2" style="font-size: 2rem"></i>
               <div class="header-nav">
-                <p class="fs-4 m-0 fw-semibold" >Hallo, Admin!</p>
+                <p class="fs-4 m-0 fw-semibold" >Hello, <?php if($admin) {echo "Admin!";} else {echo "User!";} ?> </p>
                 <p class="d-flex m-0">May your day always be right</p>
               </div>
             </div>
@@ -117,12 +125,12 @@ $result_produk_keluar = mysqli_query($db, $sql_produk_keluar);
               <div class="user-profil p-4 pb-0">
                 <div class="user-info d-flex align-items-center justify-content-center">
                   <img src="asset/user.png" class="w-50 mb-3" alt="" />
-                  <h2>Budi</h2>
+                  <h2> Warung Budi</h2>
                 </div>
                 <div class="m-auto border-bottom border-1 border-black border-dark-subtle"></div>
                 <div class="user d-flex flex-column align-items-center justify-content-center mt-2">
-                  <span class="fs-4 ">Admin</span>
-                  <p class="text-center"><?= date("l, jS F Y h:i:s A");?></p>
+                  <span class="fs-4 "><?php if($admin) {echo "Admin";} else {echo "User";} ?></span>
+                 
                 </div>
                 <div class="logout-profil ">
                   <div class="m-auto border-bottom border-1 border-black border-dark-subtle"></div>
@@ -145,7 +153,7 @@ $result_produk_keluar = mysqli_query($db, $sql_produk_keluar);
                     <h6 class="card-subtitle mb-2">Barang Masuk</h6>
                     <div class="data d-flex justify-content-between">
                       <img src="asset/open-box.png" class="object-fit-contain" style="width: 70px" />
-                      <h2 class="card-title mt-3"><?= $jumlah_masuk ?></h2>
+                      <h2 class="card-title mt-3"><?= $tampil_masuk ?></h2>
                     </div>
                   </div>
                 </div>
@@ -154,7 +162,7 @@ $result_produk_keluar = mysqli_query($db, $sql_produk_keluar);
                     <h6 class="card-subtitle mb-2 ">Barang Keluar</h6>
                     <div class="data d-flex justify-content-between">
                       <img src="asset/return-box.png" class="object-fit-contain" style="width: 70px" />
-                      <h2 class="card-title mt-3"><?= $jumlah_keluar ?></h2>
+                      <h2 class="card-title mt-3"><?= $tampil_keluar ?></h2>
                     </div>
                   </div>
                 </div>
@@ -232,7 +240,9 @@ $result_produk_keluar = mysqli_query($db, $sql_produk_keluar);
 
                 <div class="chart d-flexm-0 col">
                   <div class="card cards shadow-sm border-0 px-2 col">
-                    <canvas id="cookieChart" width=100%></canvas>
+                    <canvas id="cookieChart" width=100%>
+                      
+                    </canvas>
                   </div>
                 </div>
               </div>
@@ -247,6 +257,70 @@ $result_produk_keluar = mysqli_query($db, $sql_produk_keluar);
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <script src="script.js"></script>
-    <script src="chart.js"></script>
+    <script>
+                        
+                          var canvasElement = document.getElementById("cookieChart").getContext('2d');
+                          var config = {
+                          type: "bar",
+                          data: {
+                            labels: ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"],
+                            datasets: [
+                              {
+                                label: "Masuk",
+                                data: [<?php 
+                                        $barang_masuk = [
+                                          mysqli_num_rows(mysqli_query($db, "SELECT * FROM produk_masuk WHERE created_at LIKE '2024-01%'")),
+                                          mysqli_num_rows(mysqli_query($db, "SELECT * FROM produk_masuk WHERE created_at LIKE '2024-02%'")),
+                                          mysqli_num_rows(mysqli_query($db, "SELECT * FROM produk_masuk WHERE created_at LIKE '2024-03%'")),
+                                          mysqli_num_rows(mysqli_query($db, "SELECT * FROM produk_masuk WHERE created_at LIKE '2024-04%'")),
+                                          mysqli_num_rows(mysqli_query($db, "SELECT * FROM produk_masuk WHERE created_at LIKE '2024-05%'")),
+                                          mysqli_num_rows(mysqli_query($db, "SELECT * FROM produk_masuk WHERE created_at LIKE '2024-06%'")),
+                                          mysqli_num_rows(mysqli_query($db, "SELECT * FROM produk_masuk WHERE created_at LIKE '2024-07%'")),
+                                          mysqli_num_rows(mysqli_query($db, "SELECT * FROM produk_masuk WHERE created_at LIKE '2024-08%'")),
+                                          mysqli_num_rows(mysqli_query($db, "SELECT * FROM produk_masuk WHERE created_at LIKE '2024-09%'")),
+                                          mysqli_num_rows(mysqli_query($db, "SELECT * FROM produk_masuk WHERE created_at LIKE '2024-10%'")),
+                                          mysqli_num_rows(mysqli_query($db, "SELECT * FROM produk_masuk WHERE created_at LIKE '2024-11%'")),
+                                          mysqli_num_rows(mysqli_query($db, "SELECT * FROM produk_masuk WHERE created_at LIKE '2024-12%'"))
+                                      ];
+                                      echo implode(",", $barang_masuk);
+                                      ?>],
+                              },
+                              {
+                                label: "Keluar",
+                                data: [<?php 
+                                        $barang_keluar = [
+                                          mysqli_num_rows(mysqli_query($db, "SELECT * FROM produk_keluar WHERE created_at LIKE '2024-01%'")),
+                                          mysqli_num_rows(mysqli_query($db, "SELECT * FROM produk_keluar WHERE created_at LIKE '2024-02%'")),
+                                          mysqli_num_rows(mysqli_query($db, "SELECT * FROM produk_keluar WHERE created_at LIKE '2024-03%'")),
+                                          mysqli_num_rows(mysqli_query($db, "SELECT * FROM produk_keluar WHERE created_at LIKE '2024-04%'")),
+                                          mysqli_num_rows(mysqli_query($db, "SELECT * FROM produk_keluar WHERE created_at LIKE '2024-05%'")),
+                                          mysqli_num_rows(mysqli_query($db, "SELECT * FROM produk_keluar WHERE created_at LIKE '2024-06%'")),
+                                          mysqli_num_rows(mysqli_query($db, "SELECT * FROM produk_keluar WHERE created_at LIKE '2024-07%'")),
+                                          mysqli_num_rows(mysqli_query($db, "SELECT * FROM produk_keluar WHERE created_at LIKE '2024-08%'")),
+                                          mysqli_num_rows(mysqli_query($db, "SELECT * FROM produk_keluar WHERE created_at LIKE '2024-09%'")),
+                                          mysqli_num_rows(mysqli_query($db, "SELECT * FROM produk_keluar WHERE created_at LIKE '2024-10%'")),
+                                          mysqli_num_rows(mysqli_query($db, "SELECT * FROM produk_keluar WHERE created_at LIKE '2024-11%'")),
+                                          mysqli_num_rows(mysqli_query($db, "SELECT * FROM produk_keluar WHERE created_at LIKE '2024-12%'"))
+                                      ];
+                                      echo implode(",", $barang_keluar);
+                                      ?>],
+                              },
+                            ],
+                          },
+                          option: {
+                            responsive: true,
+                            scales: {
+                              x: {
+                                stacked: false,
+                              },
+                              y: {
+                                beginAtZero: true,
+                              },
+                            },
+                          },
+                        };
+
+                        new Chart(canvasElement, config);
+                      </script>
   </body>
 </html>

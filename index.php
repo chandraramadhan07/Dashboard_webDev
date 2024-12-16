@@ -13,8 +13,8 @@ if (isset($_POST['login'])) {
 
     if ($result->num_rows > 0) {
         $account = $result->fetch_assoc();
-        $_SESSION["username"] = $data["username"];
-        $_SESSION["isLogin"] = true;
+        $_SESSION["username"] = $account["username"];
+        $_SESSION["role"] = $account["role"];
         header('Location: dashboard.php');
         exit();
     } else{

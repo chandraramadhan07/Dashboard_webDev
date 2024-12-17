@@ -9,6 +9,28 @@ body {
   transition: background-color 0.5s ease, color 0.5s ease;
 }
 
+body.dark-mode .modal-content {
+  background-color: rgb(30 41 59) !important;
+  color: #fff;
+  border: 1px solid #64748b4d !important;
+}
+
+body.dark-mode .modal-body input,
+body.dark-mode .modal-body textarea,
+body.dark-mode .modal-body select {
+  background-color: rgb(30 41 59) !important;
+  color: #fff;
+  border: 1px solid #64748b4d !important;
+}
+
+body.dark-mode .modal-body input::placeholder {
+  color: #bbb;
+}
+
+body.dark-mode .btn-close {
+  filter: invert(1);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -39,7 +61,7 @@ body {
   border-top-right-radius: 20px;
   border-bottom-right-radius: 20px;
   z-index: 1;
-  position:relative;
+  position: relative;
 }
 
 .sidebar.cards {
@@ -57,7 +79,6 @@ body {
 /* Hide */
 .sidebar.hide {
   width: 65px;
-  
 }
 
 .sidebar.hide #arrow-button {
@@ -139,8 +160,32 @@ a.barangKeluar-aside .submenu-dropdown {
   color: var(--bg-primary) !important;
 }
 
+.laporanMasuk-aside {
+  background-color: var(--hover) !important;
+}
+
+.laporanMasuk-aside svg {
+  fill: var(--bg-primary) !important;
+}
+
+a.laporanMasuk-aside .submenu-dropdown {
+  color: var(--bg-primary) !important;
+}
+
+.laporanKeluar-aside {
+  background-color: var(--hover) !important;
+}
+
+.laporanKeluar-aside svg {
+  fill: var(--bg-primary) !important;
+}
+
+a.laporanKeluar-aside .submenu-dropdown {
+  color: var(--bg-primary) !important;
+}
+
 .laporan-aside {
-  background-color: var(--hover);
+  background-color: var(--hover) !important;
 }
 
 .laporan-aside span,
@@ -167,7 +212,7 @@ a.barangKeluar-aside .submenu-dropdown {
 }
 
 .sidebar.hide a.logout {
-  left: -.3rem;
+  left: -0.3rem;
 }
 
 .sidebar.hide a.menu span {
@@ -205,7 +250,7 @@ a.menu:hover svg.icon-dropdown {
 }
 
 a.logout {
-  width:90%;
+  width: 90%;
   bottom: 3%;
   border-radius: 5px;
   justify-content: center;
@@ -396,7 +441,8 @@ input.search {
   box-shadow: none !important;
 }
 
-button.btn-search,span.search {
+button.btn-search,
+span.search {
   background-color: var(--hover) !important;
   outline: none !important;
 }
@@ -484,7 +530,7 @@ canvas {
 
   .sidebar {
     display: flex;
-    width: 100%;
+    width: 100% !important;
     height: fit-content !important;
     padding-bottom: 2rem !important;
     border-top-right-radius: 0;
@@ -504,6 +550,14 @@ canvas {
     display: block !important;
     left: 5rem;
     top: 4.5rem;
+  }
+
+  .sidebar.open-navigation a.menu .submenu-dropdown {
+    display: block !important;
+  }
+
+  .sidebar.open-navigation a.menu svg.icon-dropdown {
+    margin-right: 0.5rem !important;
   }
 
   .sidebar.open-navigation img.logo-image {
@@ -596,6 +650,19 @@ canvas {
 
   .main-content {
     padding-top: 1rem !important;
+  }
+
+  .main-content .filter {
+    flex-direction: column !important;
+    gap: 2rem;
+  }
+
+  .main-content .filter .form-select {
+    width: auto;
+  }
+
+  .main-content .filter .input-group {
+    width: auto;
   }
 
   canvas {

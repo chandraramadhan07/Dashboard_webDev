@@ -174,13 +174,13 @@ if (isset($_POST['tambah'])) {
                     <h5 class="card-title m-0">Data Produk</h5>
                     <a href="" data-bs-toggle="modal" data-bs-target="#exampleModal" class="d-inline-block text-decoration-none p-2 bg-primary text-white rounded my-3" >Add Data</a>
                     <div class="table-responsive">
-                      <table class="table table-bordered border-secondary px-2">
+                      <table class="table table-hover table-bordered border-secondary px-2">
                         <thead>
                           <tr>
                             <th style="width: 30px;">No</th>
                             <th>Kode Produk</th>
                             <th>Nama Produk</th>
-                            <th>Jumlah</th>
+                            <th style="width: 200px;">Jumlah Stok Masuk</th>
                             <th>Tanggal</th>
                           </tr>
                         </thead>

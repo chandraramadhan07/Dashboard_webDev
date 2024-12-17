@@ -9,6 +9,11 @@ if (!isset($_SESSION['username'])) {
 }
 
 $admin = $_SESSION['role'] === 'admin';
+$bulan = [
+  "Januari" => "01", "Februari" => "02", "Maret" => "03", "April" => "04",
+  "Mei" => "05", "Juni" => "06", "Juli" => "07", "Agustus" => "08",
+  "September" => "09", "Oktober" => "10", "November" => "11", "Desember" => "12"
+];
 
 // SELECT & SEARCH FUNCTION
 if(!isset($_GET['search'])) {
@@ -41,16 +46,16 @@ $result_laporan = mysqli_query($db, $sql_laporan);
   produk.laba,
   kategori.nama_kategori, 
   produk_masuk.jumlah_masuk,
-  produk_masuk.created_at AS tanggal_masuk,
   produk_keluar.jumlah_keluar,
   produk_keluar.created_at AS tanggal_keluar
   FROM produk
   INNER JOIN produk_keluar ON produk_keluar.id_produk = produk.id_produk
   INNER JOIN produk_masuk ON produk_masuk.id_produk = produk.id_produk
   INNER JOIN kategori ON produk.kategori = kategori.id_kategori
-  WHERE produk.nama_produk LIKE '%$filter_search%'
+  WHERE produk.nama_produk LIKE '%$filter_search%' OR LEFT(produk_keluar.created_at, 2)= '$filter_search'
   ORDER BY produk_masuk.created_at DESC";
  $result_laporan = mysqli_query($db, $sql_laporan_search);
+
 }
 
 
@@ -169,21 +174,30 @@ $result_laporan = mysqli_query($db, $sql_laporan);
                 <form>
                     <div class="mb-3">
                         <div class="d-flex">
-                            <select class="form-select ms-2">
-                                <option selected>Pilih Bulan</option>
-                                <option>Januari</option>
-                                <option>Februari</option>
-                                <option>Maret</option>
-                                <option>April</option>
-                                <option>Mei</option>
-                                <option>Juni</option>
-                                <option>Juli</option>
-                                <option>Agustus</option>
-                                <option>September</option>
-                                <option">Oktober</option>
-                                <option">November</option>
-                                <option">Desember</option>
-                            </select>
+                        <select class="form-select" name="search" onchange="filterData()">
+                          <option selected value="">Pilih Bulan</option>
+                          <option value="01">Januari</option>
+                          <option value="02">Februari</option>
+                          <option value="03">Maret</option>
+                          <option value="04">April</option>
+                          <option value="05">Mei</option>
+                          <option value="06">Juni</option>
+                          <option value="07">Juli</option>
+                          <option value="08">Agustus</option>
+                          <option value="09">September</option>
+                          <option value="10">Oktober</option>
+                          <option value="11">November</option>
+                          <option value="12">Desember</option>
+                      </select>
+
+                      <script>
+                          function filterData() {
+                              const bulan = document.querySelector('select[name="search"]').value;
+                              if (bulan) {
+                                  window.location.href = `?search=${bulan}`;
+                              }
+                          }
+                      </script>
                         </div>
                     </div>
                 </form>

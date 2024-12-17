@@ -198,7 +198,7 @@ if (isset($_POST['delete'])) {
                   Add Data
                 </a>
                 <div class="table-responsive">
-                  <table class="table table-bordered border-secondary px-2">
+                  <table class="table table-hover table-bordered border-secondary px-2">
                     <thead>
                       <tr>
                         <th style="width: 30px;">No</th>

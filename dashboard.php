@@ -28,7 +28,9 @@ if ($result_jumlah_keluar) {
 }
 
 // TABEL PRODUK LABA
-$sql_jumlah_laba = "SELECT (produk_keluar.jumlah_keluar*produk.laba) as laba FROM produk INNER JOIN produk_keluar ON produk_keluar.id_produk = produk.id_produk";
+$sql_jumlah_laba = "SELECT SUM((produk.harga_jual - produk.harga_beli)*produk_keluar.jumlah_keluar) as laba 
+                    FROM produk 
+                    INNER JOIN produk_keluar ON produk_keluar.id_produk = produk.id_produk";
 $result_jumlah_laba = mysqli_query($db, $sql_jumlah_laba);
 if ($result_jumlah_laba) {
   $jumlah = mysqli_fetch_assoc($result_jumlah_laba);
@@ -191,7 +193,7 @@ $result_produk_keluar = mysqli_query($db, $sql_produk_keluar);
                     <div class="card-body">
                       <h5 class="card-title">Barang Masuk</h5>
                       <div class="mt-3 d-flex justify-content-between gap-3">
-                          <table class="table">
+                          <table class="table table-hover">
                             <thead>
                               <tr>
                                 <th>No</th>
@@ -249,6 +251,7 @@ $result_produk_keluar = mysqli_query($db, $sql_produk_keluar);
                 <div class="chart d-flexm-0 col">
                   <div class="card cards d-flex align-items-center shadow-sm border-0 px-2 col">
                     <canvas id="cookieChart"></canvas>
+                    <canvas id="lineChart"></canvas>
                   </div>
                 </div>
               </div>
@@ -263,67 +266,129 @@ $result_produk_keluar = mysqli_query($db, $sql_produk_keluar);
     <script src="script.js"></script>
     <script>
       var canvasElement = document.getElementById("cookieChart").getContext('2d');
-                          var config = {
-                          type: "bar",
-                          data: {
-                            labels: ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"],
-                            datasets: [
-                              {
-                                label: "Masuk",
-                                data: [<?php 
-                                        $barang_masuk = [
-                                          mysqli_fetch_column(mysqli_query($db, "SELECT SUM(jumlah_masuk) FROM produk_masuk WHERE created_at LIKE '2024-01%' ")),
-                                          mysqli_fetch_column(mysqli_query($db, "SELECT SUM(jumlah_masuk) FROM produk_masuk WHERE created_at LIKE '2024-02%' ")),
-                                          mysqli_fetch_column(mysqli_query($db, "SELECT SUM(jumlah_masuk) FROM produk_masuk WHERE created_at LIKE '2024-03%' ")),
-                                          mysqli_fetch_column(mysqli_query($db, "SELECT SUM(jumlah_masuk) FROM produk_masuk WHERE created_at LIKE '2024-04%' ")),
-                                          mysqli_fetch_column(mysqli_query($db, "SELECT SUM(jumlah_masuk) FROM produk_masuk WHERE created_at LIKE '2024-05%' ")),
-                                          mysqli_fetch_column(mysqli_query($db, "SELECT SUM(jumlah_masuk) FROM produk_masuk WHERE created_at LIKE '2024-06%' ")),
-                                          mysqli_fetch_column(mysqli_query($db, "SELECT SUM(jumlah_masuk) FROM produk_masuk WHERE created_at LIKE '2024-07%' ")),
-                                          mysqli_fetch_column(mysqli_query($db, "SELECT SUM(jumlah_masuk) FROM produk_masuk WHERE created_at LIKE '2024-08%' ")),
-                                          mysqli_fetch_column(mysqli_query($db, "SELECT SUM(jumlah_masuk) FROM produk_masuk WHERE created_at LIKE '2024-09%' ")),
-                                          mysqli_fetch_column(mysqli_query($db, "SELECT SUM(jumlah_masuk) FROM produk_masuk WHERE created_at LIKE '2024-10%' ")),
-                                          mysqli_fetch_column(mysqli_query($db, "SELECT SUM(jumlah_masuk) FROM produk_masuk WHERE created_at LIKE '2024-11%' ")),
-                                          mysqli_fetch_column(mysqli_query($db, "SELECT SUM(jumlah_masuk) FROM produk_masuk WHERE created_at LIKE '2024-12%' ")),
-                                      ];
-                                      echo implode(",", $barang_masuk);
-                                      ?>],
-                              },
-                              {
-                                label: "Keluar",
-                                data: [<?php 
-                                        $barang_keluar = [
-                                          mysqli_fetch_column(mysqli_query($db, "SELECT SUM(jumlah_keluar) FROM produk_keluar WHERE created_at LIKE '2024-01%' ")),
-                                          mysqli_fetch_column(mysqli_query($db, "SELECT SUM(jumlah_keluar) FROM produk_keluar WHERE created_at LIKE '2024-02%' ")),
-                                          mysqli_fetch_column(mysqli_query($db, "SELECT SUM(jumlah_keluar) FROM produk_keluar WHERE created_at LIKE '2024-03%' ")),
-                                          mysqli_fetch_column(mysqli_query($db, "SELECT SUM(jumlah_keluar) FROM produk_keluar WHERE created_at LIKE '2024-04%' ")),
-                                          mysqli_fetch_column(mysqli_query($db, "SELECT SUM(jumlah_keluar) FROM produk_keluar WHERE created_at LIKE '2024-05%' ")),
-                                          mysqli_fetch_column(mysqli_query($db, "SELECT SUM(jumlah_keluar) FROM produk_keluar WHERE created_at LIKE '2024-06%' ")),
-                                          mysqli_fetch_column(mysqli_query($db, "SELECT SUM(jumlah_keluar) FROM produk_keluar WHERE created_at LIKE '2024-07%' ")),
-                                          mysqli_fetch_column(mysqli_query($db, "SELECT SUM(jumlah_keluar) FROM produk_keluar WHERE created_at LIKE '2024-08%' ")),
-                                          mysqli_fetch_column(mysqli_query($db, "SELECT SUM(jumlah_keluar) FROM produk_keluar WHERE created_at LIKE '2024-09%' ")),
-                                          mysqli_fetch_column(mysqli_query($db, "SELECT SUM(jumlah_keluar) FROM produk_keluar WHERE created_at LIKE '2024-10%' ")),
-                                          mysqli_fetch_column(mysqli_query($db, "SELECT SUM(jumlah_keluar) FROM produk_keluar WHERE created_at LIKE '2024-11%' ")),
-                                          mysqli_fetch_column(mysqli_query($db, "SELECT SUM(jumlah_keluar) FROM produk_keluar WHERE created_at LIKE '2024-12%' ")),
-                                      ];
-                                      echo implode(",", $barang_keluar);
-                                      ?>],
-                              },
-                            ],
-                          },
-                          option: {
-                            responsive: true,
-                            scales: {
-                              x: {
-                                stacked: false,
-                              },
-                              y: {
-                                beginAtZero: true,
-                              },
-                            },
-                          },
-                        };
+      var config = {
+      type: "bar",
+      data: {
+        labels: ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"],
+        datasets: [
+          {
+            label: "Masuk",
+            data: [<?php 
+                    $barang_masuk = [
+                      mysqli_fetch_column(mysqli_query($db, "SELECT SUM(jumlah_masuk) FROM produk_masuk WHERE created_at LIKE '2024-01%' ")),
+                      mysqli_fetch_column(mysqli_query($db, "SELECT SUM(jumlah_masuk) FROM produk_masuk WHERE created_at LIKE '2024-02%' ")),
+                      mysqli_fetch_column(mysqli_query($db, "SELECT SUM(jumlah_masuk) FROM produk_masuk WHERE created_at LIKE '2024-03%' ")),
+                      mysqli_fetch_column(mysqli_query($db, "SELECT SUM(jumlah_masuk) FROM produk_masuk WHERE created_at LIKE '2024-04%' ")),
+                      mysqli_fetch_column(mysqli_query($db, "SELECT SUM(jumlah_masuk) FROM produk_masuk WHERE created_at LIKE '2024-05%' ")),
+                      mysqli_fetch_column(mysqli_query($db, "SELECT SUM(jumlah_masuk) FROM produk_masuk WHERE created_at LIKE '2024-06%' ")),
+                      mysqli_fetch_column(mysqli_query($db, "SELECT SUM(jumlah_masuk) FROM produk_masuk WHERE created_at LIKE '2024-07%' ")),
+                      mysqli_fetch_column(mysqli_query($db, "SELECT SUM(jumlah_masuk) FROM produk_masuk WHERE created_at LIKE '2024-08%' ")),
+                      mysqli_fetch_column(mysqli_query($db, "SELECT SUM(jumlah_masuk) FROM produk_masuk WHERE created_at LIKE '2024-09%' ")),
+                      mysqli_fetch_column(mysqli_query($db, "SELECT SUM(jumlah_masuk) FROM produk_masuk WHERE created_at LIKE '2024-10%' ")),
+                      mysqli_fetch_column(mysqli_query($db, "SELECT SUM(jumlah_masuk) FROM produk_masuk WHERE created_at LIKE '2024-11%' ")),
+                      mysqli_fetch_column(mysqli_query($db, "SELECT SUM(jumlah_masuk) FROM produk_masuk WHERE created_at LIKE '2024-12%' ")),
+                  ];
+                  echo implode(",", $barang_masuk);
+                  ?>],
+          },
+          {
+            label: "Keluar",
+            data: [<?php 
+                    $barang_keluar = [
+                      mysqli_fetch_column(mysqli_query($db, "SELECT SUM(jumlah_keluar) FROM produk_keluar WHERE created_at LIKE '2024-01%' ")),
+                      mysqli_fetch_column(mysqli_query($db, "SELECT SUM(jumlah_keluar) FROM produk_keluar WHERE created_at LIKE '2024-02%' ")),
+                      mysqli_fetch_column(mysqli_query($db, "SELECT SUM(jumlah_keluar) FROM produk_keluar WHERE created_at LIKE '2024-03%' ")),
+                      mysqli_fetch_column(mysqli_query($db, "SELECT SUM(jumlah_keluar) FROM produk_keluar WHERE created_at LIKE '2024-04%' ")),
+                      mysqli_fetch_column(mysqli_query($db, "SELECT SUM(jumlah_keluar) FROM produk_keluar WHERE created_at LIKE '2024-05%' ")),
+                      mysqli_fetch_column(mysqli_query($db, "SELECT SUM(jumlah_keluar) FROM produk_keluar WHERE created_at LIKE '2024-06%' ")),
+                      mysqli_fetch_column(mysqli_query($db, "SELECT SUM(jumlah_keluar) FROM produk_keluar WHERE created_at LIKE '2024-07%' ")),
+                      mysqli_fetch_column(mysqli_query($db, "SELECT SUM(jumlah_keluar) FROM produk_keluar WHERE created_at LIKE '2024-08%' ")),
+                      mysqli_fetch_column(mysqli_query($db, "SELECT SUM(jumlah_keluar) FROM produk_keluar WHERE created_at LIKE '2024-09%' ")),
+                      mysqli_fetch_column(mysqli_query($db, "SELECT SUM(jumlah_keluar) FROM produk_keluar WHERE created_at LIKE '2024-10%' ")),
+                      mysqli_fetch_column(mysqli_query($db, "SELECT SUM(jumlah_keluar) FROM produk_keluar WHERE created_at LIKE '2024-11%' ")),
+                      mysqli_fetch_column(mysqli_query($db, "SELECT SUM(jumlah_keluar) FROM produk_keluar WHERE created_at LIKE '2024-12%' ")),
+                  ];
+                  echo implode(",", $barang_keluar);
+                  ?>],
+          },
+        ],
+      },
+      option: {
+        responsive: true,
+        scales: {
+          x: {
+            stacked: false,
+          },
+          y: {
+            beginAtZero: true,
+          },
+        },
+      },
+    };
 
-                        new Chart(canvasElement, config);
+    new Chart(canvasElement, config);
+
+
+
+    const ctx = document.getElementById('lineChart').getContext('2d');
+    const config_line = {
+    type: 'line',
+    data: {
+        labels: ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"], // Label bulan
+        datasets: [{
+            label: 'Laba Hasil Penjualan',
+            data: [<?php 
+                    $barang_masuk = [
+                      mysqli_fetch_column(mysqli_query($db, "SELECT SUM((produk.harga_jual - produk.harga_beli)*produk_keluar.jumlah_keluar) as laba FROM produk INNER JOIN produk_keluar ON produk_keluar.id_produk = produk.id_produk WHERE produk_keluar.created_at LIKE '2024-01%' ")),
+                      mysqli_fetch_column(mysqli_query($db, "SELECT SUM((produk.harga_jual - produk.harga_beli)*produk_keluar.jumlah_keluar) as laba FROM produk INNER JOIN produk_keluar ON produk_keluar.id_produk = produk.id_produk WHERE produk_keluar.created_at LIKE '2024-02%' ")),
+                      mysqli_fetch_column(mysqli_query($db, "SELECT SUM((produk.harga_jual - produk.harga_beli)*produk_keluar.jumlah_keluar) as laba FROM produk INNER JOIN produk_keluar ON produk_keluar.id_produk = produk.id_produk WHERE produk_keluar.created_at LIKE '2024-03%' ")),
+                      mysqli_fetch_column(mysqli_query($db, "SELECT SUM((produk.harga_jual - produk.harga_beli)*produk_keluar.jumlah_keluar) as laba FROM produk INNER JOIN produk_keluar ON produk_keluar.id_produk = produk.id_produk WHERE produk_keluar.created_at LIKE '2024-04%' ")),
+                      mysqli_fetch_column(mysqli_query($db, "SELECT SUM((produk.harga_jual - produk.harga_beli)*produk_keluar.jumlah_keluar) as laba FROM produk INNER JOIN produk_keluar ON produk_keluar.id_produk = produk.id_produk WHERE produk_keluar.created_at LIKE '2024-05%' ")),
+                      mysqli_fetch_column(mysqli_query($db, "SELECT SUM((produk.harga_jual - produk.harga_beli)*produk_keluar.jumlah_keluar) as laba FROM produk INNER JOIN produk_keluar ON produk_keluar.id_produk = produk.id_produk WHERE produk_keluar.created_at LIKE '2024-06%' ")),
+                      mysqli_fetch_column(mysqli_query($db, "SELECT SUM((produk.harga_jual - produk.harga_beli)*produk_keluar.jumlah_keluar) as laba FROM produk INNER JOIN produk_keluar ON produk_keluar.id_produk = produk.id_produk WHERE produk_keluar.created_at LIKE '2024-07%' ")),
+                      mysqli_fetch_column(mysqli_query($db, "SELECT SUM((produk.harga_jual - produk.harga_beli)*produk_keluar.jumlah_keluar) as laba FROM produk INNER JOIN produk_keluar ON produk_keluar.id_produk = produk.id_produk WHERE produk_keluar.created_at LIKE '2024-08%' ")),
+                      mysqli_fetch_column(mysqli_query($db, "SELECT SUM((produk.harga_jual - produk.harga_beli)*produk_keluar.jumlah_keluar) as laba FROM produk INNER JOIN produk_keluar ON produk_keluar.id_produk = produk.id_produk WHERE produk_keluar.created_at LIKE '2024-09%' ")),
+                      mysqli_fetch_column(mysqli_query($db, "SELECT SUM((produk.harga_jual - produk.harga_beli)*produk_keluar.jumlah_keluar) as laba FROM produk INNER JOIN produk_keluar ON produk_keluar.id_produk = produk.id_produk WHERE produk_keluar.created_at LIKE '2024-10%' ")),
+                      mysqli_fetch_column(mysqli_query($db, "SELECT SUM((produk.harga_jual - produk.harga_beli)*produk_keluar.jumlah_keluar) as laba FROM produk INNER JOIN produk_keluar ON produk_keluar.id_produk = produk.id_produk WHERE produk_keluar.created_at LIKE '2024-11%' ")),
+                      mysqli_fetch_column(mysqli_query($db, "SELECT SUM((produk.harga_jual - produk.harga_beli)*produk_keluar.jumlah_keluar) as laba FROM produk INNER JOIN produk_keluar ON produk_keluar.id_produk = produk.id_produk WHERE produk_keluar.created_at LIKE '2024-12%' ")),
+                  ];
+                  echo implode(",", $barang_masuk);
+                  ?>], 
+            borderColor: 'rgba(75, 192, 192, 1)',
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            tension: 0.4,
+            borderWidth: 2,
+            pointBackgroundColor: 'rgba(75, 192, 192, 1)',
+            pointRadius: 4,
+                  }]
+            },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                }
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Month'
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Values'
+                    }
+                }
+            }
+        }
+    };
+    const lineChart = new Chart(ctx, config_line);
+
     </script>
   </body>
 </html>

@@ -11,47 +11,65 @@ if (!isset($_SESSION['username'])) {
 $admin = $_SESSION['role'] === 'admin';
 
 // SELECT & SEARCH FUNCTION
+
 if(!isset($_GET['search'])) {
   $sql_laporan = "SELECT 
-produk.id_produk, 
-produk.nama_produk,  
-produk.stok, 
-produk.harga_beli, 
-produk.harga_jual,
-(produk.laba*produk_keluar.jumlah_keluar) as laba,
-kategori.nama_kategori,
-produk_masuk.jumlah_masuk,
-produk_masuk.created_at AS tanggal_masuk,
-produk_keluar.jumlah_keluar,
-produk_keluar.created_at AS tanggal_keluar
-FROM produk
-INNER JOIN produk_keluar ON produk_keluar.id_produk = produk.id_produk
-INNER JOIN produk_masuk ON produk_masuk.id_produk = produk.id_produk
-INNER JOIN kategori ON produk.kategori = kategori.id_kategori
-ORDER BY produk_masuk.created_at DESC";
+                  produk.id_produk, 
+                  produk.nama_produk,  
+                  produk.stok, 
+                  produk.harga_beli, 
+                  produk.harga_jual,
+                  (produk.harga_jual - produk.harga_beli) AS laba,
+                  ((produk.harga_jual - produk.harga_beli) * produk_keluar.jumlah_keluar) AS laba_penjualan,
+                  kategori.nama_kategori,
+                  produk_keluar.jumlah_keluar,
+                  produk_keluar.created_at AS tanggal_keluar
+                  FROM produk_keluar
+                  LEFT JOIN produk ON produk.id_produk = produk_keluar.id_produk
+                  LEFT JOIN kategori ON produk.kategori = kategori.id_kategori
+                  ORDER BY produk_keluar.created_at DESC";
 $result_laporan = mysqli_query($db, $sql_laporan);
 } else {
   $filter_search = $_GET['search'];
   $sql_laporan_search = "SELECT 
-  produk.id_produk, 
-  produk.nama_produk, 
-  produk.stok, 
-  produk.harga_beli, 
-  produk.harga_jual,
-  produk.laba,
-  kategori.nama_kategori, 
-  produk_masuk.jumlah_masuk,
-  produk_masuk.created_at AS tanggal_masuk,
-  produk_keluar.jumlah_keluar,
-  produk_keluar.created_at AS tanggal_keluar
-  FROM produk
-  INNER JOIN produk_keluar ON produk_keluar.id_produk = produk.id_produk
-  INNER JOIN produk_masuk ON produk_masuk.id_produk = produk.id_produk
-  INNER JOIN kategori ON produk.kategori = kategori.id_kategori
-  WHERE produk.nama_produk LIKE '%$filter_search%'
-  ORDER BY produk_masuk.created_at DESC";
+                         produk.id_produk, 
+                         produk.nama_produk, 
+                         produk.stok, 
+                         produk.harga_beli, 
+                         produk.harga_jual,
+                         (produk.harga_jual - produk.harga_beli) AS laba,
+                         ((produk.harga_jual - produk.harga_beli)*produk_keluar.jumlah_keluar) AS laba_penjualan,
+                         kategori.nama_kategori, 
+                         produk_keluar.jumlah_keluar,
+                         produk_keluar.created_at AS tanggal_keluar
+                         FROM produk_keluar
+                         INNER JOIN produk ON produk.id_produk = produk_keluar.id_produk
+                         INNER JOIN kategori ON produk.kategori = kategori.id_kategori
+                         WHERE produk.nama_produk LIKE '%$filter_search%' OR MONTH(produk_keluar.created_at) LIKE '%$filter_search%'
+                         ORDER BY produk_keluar.created_at DESC";
  $result_laporan = mysqli_query($db, $sql_laporan_search);
 }
+
+// FILTER DATA BY BULAN
+// if(isset($_GET['filter'])) {
+//   $sql_laporan_bulan = "SELECT 
+//                          produk.id_produk, 
+//                          produk.nama_produk, 
+//                          produk.stok, 
+//                          produk.harga_beli, 
+//                          produk.harga_jual,
+//                          (produk.harga_jual - produk.harga_beli) AS laba,
+//                          ((produk.harga_jual - produk.harga_beli)*produk_keluar.jumlah_keluar) AS laba_penjualan,
+//                          kategori.nama_kategori, 
+//                          produk_keluar.jumlah_keluar,
+//                          produk_keluar.created_at AS tanggal_keluar
+//                          FROM produk_keluar
+//                          INNER JOIN produk ON produk.id_produk = produk_keluar.id_produk
+//                          INNER JOIN kategori ON produk.kategori = kategori.id_kategori
+//                          WHERE MONTH(produk_keluar.created_at) ='%$filter_bulan%'
+//                          ORDER BY produk_keluar.created_at DESC";
+//  $result_laporan = mysqli_query($db, $sql_laporan_bulan);
+// }
 
 
 ?>
@@ -78,10 +96,10 @@ $result_laporan = mysqli_query($db, $sql_laporan);
         <div class="position-relative">
           <button id="arrow-button" class="arrow position-absolute border-0 shadow-lg d-flex align-items-center justify-content-center rounded-5"><i class="bi bi-arrow-right"></i></button>
         </div>
-          <a href="dashboard.php" class="menu dashboard-aside text-decoration-none mt-4 p-1 mx-2 rounded" aria-current="true"><i class="bi bi-house-fill fs-5 mx-2"></i><span class="position-absolute">Dashboard</span></a>
+          <a href="dashboard.php" class="menu text-decoration-none mt-4 p-1 mx-2 rounded" aria-current="true"><i class="bi bi-house-fill fs-5 mx-2"></i><span class="position-absolute">Dashboard</span></a>
           <a href="manageData.php" class="<?php if(!$admin){echo "d-none";}?> menu text-decoration-none mt-4 p-1 mx-2 rounded" aria-current="true"><i class="bi bi-dropbox fs-5 mx-2"></i><span class="position-absolute">Manage Data</span></a>
           <a class="<?php if(!$admin){echo "d-none";}?> menu nav-link position-relative text-decoration-none mt-4 p-1 mx-2 rounded text-white" data-bs-toggle="collapse" href="#kelolaProduk" role="button" aria-expanded="false" aria-controls="kelolaProduk">
-          <i class="bi bi-box-seam-fill fs-5 mx-2"></i><span class="position-absolute">Kelola Stok<i class="arrow-dwn bi ms-2 bi-caret-down-fill"></i>
+          <i class="bi bi-box-seam-fill fs-5 mx-2"></i><span class="position-absolute">Kelola Stok<i class="bi ms-2 bi-caret-down-fill"></i>
           </span>
           </a>
           <div class="kelolastok-dropdown collapse" id="kelolaProduk">
@@ -90,14 +108,14 @@ $result_laporan = mysqli_query($db, $sql_laporan);
               <li class="d-flex align-items-center"><a href="barangKeluar.php" class="menu p-1 d-flex nav-link text-white rounded"><svg class="icon-dropdown" fill="white" width='20' height='20' xmlns="http://www.w3.org/2000/svg" shape-rendering="geometricPrecision" text-rendering="geometricPrecision" image-rendering="optimizeQuality" fill-rule="evenodd" clip-rule="evenodd" viewBox="0 0 505 511.5"><path d="m336.11 39.84-115.38 68.94 135.38 18.4 111.32-69.44-131.32-17.9zm25.45 204.61c73.74 0 133.53 59.78 133.53 133.53 0 73.74-59.79 133.52-133.53 133.52-73.75 0-133.53-59.78-133.53-133.52 0-73.75 59.78-133.53 133.53-133.53zm-50.44 179.72 15.51-78.82 15.73 23.69c33.86-13.59 52.88-36 55.7-70.5 27.82 48.63 10.93 92.22-24.33 117.77l16.05 24.16-78.65-16.3h-.01zM204.83 126.13l-.09 141.71-51.45-35.04-51.46 29.07 6.1-148.91-88.54-12.03v312.98l178.95 23.13c2.52 7.1 5.47 13.99 8.85 20.63L9.3 432.07c-5.17-.2-9.3-4.47-9.3-9.68V89.86c.27-4.05 1.89-6.89 5.72-8.81L182.48.85c1.58-.72 3.52-1.01 5.25-.77l308.18 42.04c5.09.59 8.58 4.77 8.58 9.99v.02L505 280.9c-5.72-8.46-15.57-20.29-19.93-27.77V69.56l-115.81 74.93v59.81a174.846 174.846 0 0 0-19.39.36v-58.82l-145.04-19.71zm-81.52-30.58 112.17-69.44-47.58-6.49L44.24 84.8l79.07 10.75z"/></svg><p class="submenu-dropdown m-0">Barang Keluar</p></a></li>
             </ul>
           </div>
-          <a class="<?php if(!$admin){echo "d-none";}?> menu nav-link position-relative text-decoration-none mt-4 p-1 mx-2 rounded text-white" data-bs-toggle="collapse" href="#laporan" role="button" aria-expanded="false" aria-controls="laporan">
+          <a class="menu laporan-aside nav-link position-relative text-decoration-none mt-4 p-1 mx-2 rounded text-white" data-bs-toggle="collapse" href="#laporan" role="button" aria-expanded="false" aria-controls="laporan">
           <i class="bi bi-file-earmark-text-fill fs-5 mx-2"></i><span class="position-absolute">Laporan<i class="bi ms-2 bi-caret-down-fill"></i>
           </span>
           </a>
           <div class="kelolastok-dropdown collapse" id="laporan">
             <ul class="list-unstyled d-flex align-items-center flex-column gap-2">
               <li class="d-flex align-items-center my-2"><a href="laporanMasuk.php" class="menu d-flex p-1 nav-link text-white rounded"><svg class="icon-dropdown"version='1.1'id='Layer_1' xmlns='http://www.w3.org/2000/svg'xmlns:xlink='http://www.w3.org/1999/xlink' x='0px' y='0px'viewBox='0 0 122.88 94.45'style='enable-background: new 0 0 122.88 94.45'xml:space='preserve'width='20'height='20'fill='white'><g><path class='st0'd='M0,41.16h24.83v44.18H0V41.16L0,41.16z M36,11.76L71.01,0.1c0.42-0.14,0.86-0.13,1.24,0.01V0.1l35.47,12.15 c0.87,0.3,1.4,1.14,1.32,2.02c0.01,0.04,0.01,0.09,0.01,0.14v37.04l1.56-0.77c9.6-3.16,16.43,6.88,9.35,13.87 c-13.9,10.11-28.15,18.43-42.73,25.15c-10.59,6.44-21.18,6.22-31.76,0l-15.63-8.07V44.71h4.48V13.7 C34.31,12.71,35.04,11.89,36,11.76L36,11.76z M46.44,44.71c7.04,1.26,14.08,5.08,21.12,9.51h1.47V33.88L38.97,21.05v23.66H46.44 L46.44,44.71z M74.43,54.22h6.04c5.84,0.35,8.9,6.27,3.22,10.16c-2.67,1.96-5.84,2.7-9.26,2.86v4.89 C80.83,71.77,86.1,70,89.49,64.7l1.93-4.51l12.97-6.43V20.78L74.43,33.9V54.22L74.43,54.22z M69.04,67.12 c-0.65-0.05-1.31-0.1-1.96-0.16c-4.22-0.21-4.4,5.46,0,5.48c0.64,0.05,1.3,0.02,1.96-0.04v-1.5V67.12L69.04,67.12z M71.6,5.49 l-29.82,9.94l29.96,13.59l29.97-13.21L71.6,5.49L71.6,5.49z'/></g></svg><p class="submenu-dropdown m-0">Laporan Masuk</p></a></li>
-              <li class="d-flex align-items-center"><a href="laporanKeluar.php" class="menu p-1 d-flex nav-link text-white rounded"><svg class="icon-dropdown" fill="white" width='20' height='20' xmlns="http://www.w3.org/2000/svg" shape-rendering="geometricPrecision" text-rendering="geometricPrecision" image-rendering="optimizeQuality" fill-rule="evenodd" clip-rule="evenodd" viewBox="0 0 505 511.5"><path d="m336.11 39.84-115.38 68.94 135.38 18.4 111.32-69.44-131.32-17.9zm25.45 204.61c73.74 0 133.53 59.78 133.53 133.53 0 73.74-59.79 133.52-133.53 133.52-73.75 0-133.53-59.78-133.53-133.52 0-73.75 59.78-133.53 133.53-133.53zm-50.44 179.72 15.51-78.82 15.73 23.69c33.86-13.59 52.88-36 55.7-70.5 27.82 48.63 10.93 92.22-24.33 117.77l16.05 24.16-78.65-16.3h-.01zM204.83 126.13l-.09 141.71-51.45-35.04-51.46 29.07 6.1-148.91-88.54-12.03v312.98l178.95 23.13c2.52 7.1 5.47 13.99 8.85 20.63L9.3 432.07c-5.17-.2-9.3-4.47-9.3-9.68V89.86c.27-4.05 1.89-6.89 5.72-8.81L182.48.85c1.58-.72 3.52-1.01 5.25-.77l308.18 42.04c5.09.59 8.58 4.77 8.58 9.99v.02L505 280.9c-5.72-8.46-15.57-20.29-19.93-27.77V69.56l-115.81 74.93v59.81a174.846 174.846 0 0 0-19.39.36v-58.82l-145.04-19.71zm-81.52-30.58 112.17-69.44-47.58-6.49L44.24 84.8l79.07 10.75z"/></svg><p class="submenu-dropdown m-0">Laporan Keluar</p></a></li>
+              <li class="d-flex align-items-center"><a href="laporanKeluar.php" class="menu laporanKeluar-aside p-1 d-flex nav-link text-white rounded"><svg class="icon-dropdown" fill="white" width='20' height='20' xmlns="http://www.w3.org/2000/svg" shape-rendering="geometricPrecision" text-rendering="geometricPrecision" image-rendering="optimizeQuality" fill-rule="evenodd" clip-rule="evenodd" viewBox="0 0 505 511.5"><path d="m336.11 39.84-115.38 68.94 135.38 18.4 111.32-69.44-131.32-17.9zm25.45 204.61c73.74 0 133.53 59.78 133.53 133.53 0 73.74-59.79 133.52-133.53 133.52-73.75 0-133.53-59.78-133.53-133.52 0-73.75 59.78-133.53 133.53-133.53zm-50.44 179.72 15.51-78.82 15.73 23.69c33.86-13.59 52.88-36 55.7-70.5 27.82 48.63 10.93 92.22-24.33 117.77l16.05 24.16-78.65-16.3h-.01zM204.83 126.13l-.09 141.71-51.45-35.04-51.46 29.07 6.1-148.91-88.54-12.03v312.98l178.95 23.13c2.52 7.1 5.47 13.99 8.85 20.63L9.3 432.07c-5.17-.2-9.3-4.47-9.3-9.68V89.86c.27-4.05 1.89-6.89 5.72-8.81L182.48.85c1.58-.72 3.52-1.01 5.25-.77l308.18 42.04c5.09.59 8.58 4.77 8.58 9.99v.02L505 280.9c-5.72-8.46-15.57-20.29-19.93-27.77V69.56l-115.81 74.93v59.81a174.846 174.846 0 0 0-19.39.36v-58.82l-145.04-19.71zm-81.52-30.58 112.17-69.44-47.58-6.49L44.24 84.8l79.07 10.75z"/></svg><p class="submenu-dropdown m-0">Laporan Keluar</p></a></li>
         </ul>
           </div> 
           <a href="logout.php" class="logout d-flex align-items-center text-decoration-none text-danger position-absolute mt-4 p-1 mx-2" aria-current="true"
@@ -174,21 +192,24 @@ $result_laporan = mysqli_query($db, $sql_laporan);
                 <form>
                     <div class="mb-3">
                         <div class="d-flex">
-                            <select class="form-select ms-2">
-                                <option selected>Pilih Bulan</option>
-                                <option>Januari</option>
-                                <option>Februari</option>
-                                <option>Maret</option>
-                                <option>April</option>
-                                <option>Mei</option>
-                                <option>Juni</option>
-                                <option>Juli</option>
-                                <option>Agustus</option>
-                                <option>September</option>
-                                <option">Oktober</option>
-                                <option">November</option>
-                                <option">Desember</option>
+                          <form method="GET">
+                            <select name="filter_bulan" class="form-select ms-2">
+                              <option selected>Pilih Bulan</option>
+                              <option value="01">Januari</option>
+                              <option value="02">Februari</option>
+                              <option value="03">Maret</option>
+                              <option value="04">April</option>
+                              <option value="05">Mei</option>
+                              <option value="06">Juni</option>
+                              <option value="07">Juli</option>
+                              <option value="08">Agustus</option>
+                              <option value="09">September</option>
+                              <option value="10">Oktober</option>
+                              <option value="11">November</option>
+                              <option value="12">Desember</option>
                             </select>
+                            <button type="submit" name="filter">Filter by Month</button>
+                          </form>
                         </div>
                     </div>
                 </form>
@@ -200,21 +221,19 @@ $result_laporan = mysqli_query($db, $sql_laporan);
                 <div class="card pt-5 cards shadow-sm border-0 col-md-12">
                   <div class="overflow-x-auto card-body">
                     <div class="table-responsive">
-                    <table class="table border-secondary px-2">
+                    <table id="#example" class="table table-hover border-secondary px-2">
                       <thead>
                         <tr>
                           <th style="width: 30px;">No</th>
                           <th>ID Produk</th>
                           <th>Nama Produk</th>
                           <th>Kategori</th>
-                          <th>Stok</th>
                           <th>Harga Beli</th>
                           <th>Harga Jual</th>
-                          <th>Jumlah Masuk</th>
-                          <th>Tanggal Masuk</th>
+                          <th>Laba per Barang</th>
                           <th>Jumlah Keluar</th>
-                          <th>Tanggal Keluar</th>
                           <th>Laba Penjualan</th>
+                          <th>Tanggal Keluar</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -227,13 +246,11 @@ $result_laporan = mysqli_query($db, $sql_laporan);
                           <td><?=$data['id_produk'];?></td>
                           <td><?=$data['nama_produk'];?></td>
                           <td><?=$data['nama_kategori'];?></td>
-                          <td><?=$data['stok'];?></td>
                           <td>Rp <?=number_format($data['harga_beli'], 2, ",", ".");?></td>
                           <td>Rp <?=number_format($data['harga_jual'], 2, ",", ".");?></td>
-                          <td><?=$data['jumlah_masuk'];?></td>
-                          <td><?=date('d F Y', strtotime($data['tanggal_masuk']));?></td>
-                          <td><?=$data['jumlah_keluar'];?></td>
                           <td>Rp <?=number_format($data['laba'], 2, ",", ".");?></td>
+                          <td><?=$data['jumlah_keluar'];?></td>
+                          <td>Rp <?=number_format($data['laba_penjualan'], 2, ",", ".");?></td>
                           <td><?=date('d F Y', strtotime($data['tanggal_keluar']));?></td>
                         </tr>
                       </tbody>
@@ -255,128 +272,4 @@ $result_laporan = mysqli_query($db, $sql_laporan);
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <script src="script.js"></script>
   </body>
-
-  <!-- Modal -->
-  <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h1 class="modal-title fs-5" id="exampleModalLabel">Tambah Produk</h1>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <!-- FORM ADD DATA -->
-          <form method="POST" class="w-100 h-50 p-4 d-flex flex-column rounded-3 justify-content-center">
-            <div class="mb-3">
-              <input type="text" name="nama_produk" placeholder="Nama Produk" class="form-control" id="" aria-describedby="emailHelp" />
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Kategori</label>
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="kategori" id="kategori1" value="Elektronik" />
-                <label class="form-check-label" for="kategori1">Elektronik</label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="kategori" id="kategori2" value="Pakaian" />
-                <label class="form-check-label" for="kategori2">Pakaian</label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="kategori" id="kategori3" value="Makanan" />
-                <label class="form-check-label" for="kategori3">Makanan</label>
-              </div>
-            </div>
-            <div class="mb-3">
-              <input type="number" name="stok_awal" placeholder="Stok Awal" class="form-control" id="" />
-            </div>
-            <div class="mb-3">
-              <input type="number" name="harga_beli" placeholder="Harga Beli" class="form-control" id="" />
-            </div>
-            <div class="mb-3">
-              <input type="number" name="harga_jual" placeholder="Harga Jual" class="form-control" id="" />
-            </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          <!-- *Button name=submit nabrak sama type=button -->
-          <button name="submit" class="btn btn-primary">Add changes</button>
-        </div>
-        <!-- *PENEMPATAN FORM (gak bisa di submit jika button tidak didalam tag form) -->
-        </form>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal Edit -->
-  <div class="modal fade" id="edit" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h1 class="modal-title fs-5" id="exampleModalLabel">Edit Produk</h1>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <form method="POST" class="w-100 h-50 p-4 d-flex flex-column rounded-3 justify-content-center">
-            <div class="mb-3">
-              <input type="email" name="nama_produk" placeholder="Nama Produk" class="form-control" id="" aria-describedby="emailHelp" />
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Kategori</label>
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="kategori" id="kategori1" value="Elektronik" />
-                <label class="form-check-label" for="kategori1">Elektronik</label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="kategori" id="kategori2" value="Pakaian" />
-                <label class="form-check-label" for="kategori2">Pakaian</label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="kategori" id="kategori3" value="Makanan" />
-                <label class="form-check-label" for="kategori3">Makanan</label>
-              </div>
-            </div>
-            <div class="mb-3">
-              <input type="number" name="stok_awal" placeholder="Stok Awal" class="form-control" id="" />
-            </div>
-            <div class="mb-3">
-              <input type="number" name="harga_beli" placeholder="Harga Beli" class="form-control" id="" />
-            </div>
-            <div class="mb-3">
-              <input type="number" name="harga_jual" placeholder="Harga Jual" class="form-control" id="" />
-            </div>
-          
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          <!-- *name=save nabrak dengan type=button -->
-          <button name="save" class="btn btn-primary">Save changes</button>
-        <!-- *PENEMPATAN FORM (gak bisa di klik jika button tidak didalam tag form) -->  
-          </form>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal Delete -->
-  <div class="modal fade" id="delete" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h1 class="modal-title fs-5" id="exampleModalLabel">Hapus Produk</h1>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <form class="w-100 h-50 p-4 d-flex flex-column rounded-3 justify-content-center">
-            <p class="fw-semibold">Apakah anda yakin ingin menghapus {nama produk} ini?</p>
-          
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          <!-- *name=delete nabrak dengan type=button -->
-          <button name='delete' class='btn btn-danger'>Delete</button>"
-          <!-- *PENEMPATAN FORM (gak bisa di klik jika button tidak didalam tag form) --> 
-        </form>
-        </div>
-      </div>
-    </div>
-  </div>
 </html>

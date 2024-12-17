@@ -1,6 +1,6 @@
 <?php
-include 'database/database.php';
 session_start();
+include 'database/database.php';
 $error = "";
 if (isset($_POST['login'])) {
     $username = $_POST["username"];

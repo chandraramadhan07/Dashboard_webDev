@@ -57,6 +57,7 @@ body {
 /* Hide */
 .sidebar.hide {
   width: 65px;
+  
 }
 
 .sidebar.hide #arrow-button {
@@ -166,7 +167,7 @@ a.barangKeluar-aside .submenu-dropdown {
 }
 
 .sidebar.hide a.logout {
-  left: 0;
+  left: -.3rem;
 }
 
 .sidebar.hide a.menu span {
@@ -211,7 +212,7 @@ a.logout {
 }
 
 a.logout:hover {
-  
+  /* width: auto; */
   background-color: red;
   color: white !important;
 }

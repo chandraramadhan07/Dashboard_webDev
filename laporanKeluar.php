@@ -45,9 +45,34 @@ $result_laporan = mysqli_query($db, $sql_laporan);
                          FROM produk_keluar
                          INNER JOIN produk ON produk.id_produk = produk_keluar.id_produk
                          INNER JOIN kategori ON produk.kategori = kategori.id_kategori
-                         WHERE produk.nama_produk LIKE '%$filter_search%' OR MONTH(produk_keluar.created_at) LIKE '%$filter_search%'
+                         WHERE produk.nama_produk LIKE '%$filter_search%'
                          ORDER BY produk_keluar.created_at DESC";
  $result_laporan = mysqli_query($db, $sql_laporan_search);
+
+}
+
+// FILTER BULAN
+if(isset($_GET['bulan'])) {
+$sql_laporan_bulan = "SELECT 
+                       produk.id_produk, 
+                       produk.nama_produk, 
+                       produk.stok, 
+                       produk.harga_beli, 
+                       produk.harga_jual,
+                       (produk.harga_jual - produk.harga_beli) AS laba,
+                       ((produk.harga_jual - produk.harga_beli)*produk_keluar.jumlah_keluar) AS laba_penjualan,
+                       kategori.nama_kategori, 
+                       produk_keluar.jumlah_keluar,
+                       produk_keluar.created_at AS tanggal_keluar
+                       FROM produk_keluar
+                       INNER JOIN produk ON produk.id_produk = produk_keluar.id_produk
+                       INNER JOIN kategori ON produk.kategori = kategori.id_kategori
+                       WHERE MONTH(produk_keluar.created_at) = '$_GET[bulan]'";
+$result_laporan = mysqli_query($db, $sql_laporan_bulan);
+}
+
+if(isset($_GET['reset'])) {
+  header('location: laporanKeluar.php');
 }
 
 // FILTER DATA BY BULAN
@@ -192,26 +217,27 @@ $result_laporan = mysqli_query($db, $sql_laporan);
                 </form>
                 <form>
                     <div class="mb-3">
-                        <div class="d-flex">
-                          <form method="GET">
-                            <select name="filter_bulan" class="form-select ms-2">
-                              <option selected>Pilih Bulan</option>
-                              <option value="01">Januari</option>
-                              <option value="02">Februari</option>
-                              <option value="03">Maret</option>
-                              <option value="04">April</option>
-                              <option value="05">Mei</option>
-                              <option value="06">Juni</option>
-                              <option value="07">Juli</option>
-                              <option value="08">Agustus</option>
-                              <option value="09">September</option>
-                              <option value="10">Oktober</option>
-                              <option value="11">November</option>
-                              <option value="12">Desember</option>
-                            </select>
-                            <button type="submit" name="filter">Filter by Month</button>
-                          </form>
-                        </div>
+                      <div class="d-flex align-items-center justify-content-center">
+                        <form method="GET">
+                          <select name="bulan" class="form-select ms-2">
+                            <option selected>Pilih Bulan</option>
+                            <option value="01">Januari</option>
+                            <option value="02">Februari</option>
+                            <option value="03">Maret</option>
+                            <option value="04">April</option>
+                            <option value="05">Mei</option>
+                            <option value="06">Juni</option>
+                            <option value="07">Juli</option>
+                            <option value="08">Agustus</option>
+                            <option value="09">September</option>
+                            <option value="10">Oktober</option>
+                            <option value="11">November</option>
+                            <option value="12">Desember</option>
+                          </select>
+                          <button class="border-0 ms-2 rounded" type="submit">Filter</button>
+                          <button name="reset">Reset</button>
+                      </form>
+                      </div>
                     </div>
                 </form>
             </div>
@@ -222,7 +248,7 @@ $result_laporan = mysqli_query($db, $sql_laporan);
                 <div class="card pt-5 cards shadow-sm border-0 col-md-12">
                   <div class="overflow-x-auto card-body">
                     <div class="table-responsive">
-                    <table id="#example" class="table table-hover border-secondary px-2">
+                    <table id="" class="table table-hover border-secondary px-2">
                       <thead>
                         <tr>
                           <th style="width: 30px;">No</th>

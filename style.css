@@ -657,8 +657,12 @@ canvas {
     gap: 2rem;
   }
 
-  .main-content .filter .form-select {
-    width: auto;
+  .chart {
+    flex-direction: column;
+  }
+
+  .main-content .form-select {
+    width: auto !important;
   }
 
   .main-content .filter .input-group {

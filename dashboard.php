@@ -28,9 +28,9 @@ if ($result_jumlah_keluar) {
 }
 
 // TABEL PRODUK LABA
-$sql_jumlah_laba = "SELECT SUM((produk.harga_jual - produk.harga_beli)*produk_keluar.jumlah_keluar) as laba 
-                    FROM produk 
-                    INNER JOIN produk_keluar ON produk_keluar.id_produk = produk.id_produk";
+$sql_jumlah_laba = "SELECT IFNULL(SUM((produk.harga_jual - produk.harga_beli) * produk_keluar.jumlah_keluar), 0) AS laba
+                    FROM produk
+                    LEFT JOIN produk_keluar ON produk_keluar.id_produk = produk.id_produk";
 $result_jumlah_laba = mysqli_query($db, $sql_jumlah_laba);
 if ($result_jumlah_laba) {
   $jumlah = mysqli_fetch_assoc($result_jumlah_laba);
@@ -187,7 +187,7 @@ $result_produk_keluar = mysqli_query($db, $sql_produk_keluar);
                   </div>
                 </div>
               </div>
-
+              
               <div class="row gap-4">
                 <div class="data-stok d-flex gap-4">
                   <div class="card cards shadow-sm border-0 col">
@@ -248,13 +248,15 @@ $result_produk_keluar = mysqli_query($db, $sql_produk_keluar);
                     </div>
                   </div>
                 </div>
-
-                <div class="chart d-flexm-0 col">
+                <div class="chart d-flex m-0 gap-4 col">
                   <div class="card cards d-flex align-items-center shadow-sm border-0 px-2 col">
                     <canvas id="cookieChart"></canvas>
-                    <canvas id="lineChart"></canvas>
                   </div>
+
+                  <div class="card cards d-flex align-items-center shadow-sm border-0 px-2 col">
+                    <canvas id="lineChart"></canvas>
                 </div>
+              </div>
               </div>
             </div>
           </div>

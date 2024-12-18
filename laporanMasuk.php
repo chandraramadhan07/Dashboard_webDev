@@ -14,38 +14,59 @@ $admin = $_SESSION['role'] === 'admin';
 if(!isset($_GET['search'])) {
   $sql_laporan = "SELECT 
                   produk.id_produk, 
-                  produk.nama_produk, 
+                  produk.nama_produk,  
                   produk.stok, 
                   produk.harga_beli, 
                   produk.harga_jual,
-                  kategori.nama_kategori, 
+                  kategori.nama_kategori,
                   produk_masuk.jumlah_masuk,
                   produk_masuk.created_at AS tanggal_masuk
                   FROM produk_masuk
-                  INNER JOIN produk ON produk.id_produk = produk_masuk.id_produk
-                  INNER JOIN kategori ON produk.kategori = kategori.id_kategori
+                  LEFT JOIN produk ON produk.id_produk = produk_masuk.id_produk
+                  LEFT JOIN kategori ON produk.kategori = kategori.id_kategori
                   ORDER BY produk_masuk.created_at DESC";
 $result_laporan = mysqli_query($db, $sql_laporan);
 } else {
   $filter_search = $_GET['search'];
   $sql_laporan_search = "SELECT 
-                          produk.id_produk, 
-                          produk.nama_produk, 
-                          produk.stok, 
-                          produk.harga_beli, 
-                          produk.harga_jual,
-                          kategori.nama_kategori, 
-                          produk_masuk.jumlah_masuk,
-                          produk_masuk.created_at AS tanggal_masuk
-                          FROM produk
-                          INNER JOIN produk_masuk ON produk_masuk.id_produk = produk.id_produk
-                          INNER JOIN kategori ON produk.kategori = kategori.id_kategori
-                          WHERE produk.nama_produk LIKE '%$filter_search%' OR MONTH(produk_masuk.created_at) LIKE '%$filter_search%'
-                          ORDER BY produk_masuk.created_at DESC";
+                         produk.id_produk, 
+                         produk.nama_produk, 
+                         produk.stok, 
+                         produk.harga_beli, 
+                         produk.harga_jual,
+                         kategori.nama_kategori, 
+                         produk_masuk.jumlah_masuk,
+                         produk_masuk.created_at AS tanggal_masuk
+                         FROM produk_masuk
+                         INNER JOIN produk ON produk.id_produk = produk_masuk.id_produk
+                         INNER JOIN kategori ON produk.kategori = kategori.id_kategori
+                         WHERE produk.nama_produk LIKE '%$filter_search%'
+                         ORDER BY produk_masuk.created_at DESC";
  $result_laporan = mysqli_query($db, $sql_laporan_search);
+
 }
 
+// FILTER BULAN
+if(isset($_GET['bulan'])) {
+$sql_laporan_bulan = "SELECT 
+                       produk.id_produk, 
+                       produk.nama_produk, 
+                       produk.stok, 
+                       produk.harga_beli, 
+                       produk.harga_jual,
+                       kategori.nama_kategori, 
+                       produk_masuk.jumlah_masuk,
+                       produk_masuk.created_at AS tanggal_masuk
+                       FROM produk_masuk
+                       INNER JOIN produk ON produk.id_produk = produk_masuk.id_produk
+                       INNER JOIN kategori ON produk.kategori = kategori.id_kategori
+                       WHERE MONTH(produk_masuk.created_at) = '$_GET[bulan]'";
+$result_laporan = mysqli_query($db, $sql_laporan_bulan);
+}
 
+if(isset($_GET['reset'])) {
+  header('location: laporanMasuk.php');
+}
 ?>
 
 <!DOCTYPE html>
@@ -164,27 +185,25 @@ $result_laporan = mysqli_query($db, $sql_laporan);
                         </span>
                     </div>
                 </form>
-                <form>
-                    <div class="mb-3">
-                        <div class="d-flex align-items-center justify-content-center">
-                            <select class="form-select ms-2">
-                                <option selected>Pilih Bulan</option>
-                                <option>Januari</option>
-                                <option>Februari</option>
-                                <option>Maret</option>
-                                <option>April</option>
-                                <option>Mei</option>
-                                <option>Juni</option>
-                                <option>Juli</option>
-                                <option>Agustus</option>
-                                <option>September</option>
-                                <option">Oktober</option>
-                                <option">November</option>
-                                <option">Desember</option>
-                            </select>
-                        </div>
-                    </div>
-                </form>
+                <form method="GET">
+                          <select name="bulan" class="form-select ms-2">
+                            <option selected>Pilih Bulan</option>
+                            <option value="01">Januari</option>
+                            <option value="02">Februari</option>
+                            <option value="03">Maret</option>
+                            <option value="04">April</option>
+                            <option value="05">Mei</option>
+                            <option value="06">Juni</option>
+                            <option value="07">Juli</option>
+                            <option value="08">Agustus</option>
+                            <option value="09">September</option>
+                            <option value="10">Oktober</option>
+                            <option value="11">November</option>
+                            <option value="12">Desember</option>
+                          </select>
+                          <button class="border-0 ms-2 rounded" type="submit">Filter</button>
+                          <button name="reset">Reset</button>
+                      </form>
               </div>
 
             </div>

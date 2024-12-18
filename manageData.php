@@ -45,15 +45,15 @@ if (isset($_POST['submit'])) {
   $sql_produk = "INSERT INTO produk (id_produk, nama_produk, kategori, stok, harga_beli, harga_jual, laba)
                  VALUES ('$kode_produk', '$namaProduk', '$id_kategori', '$stok', '$hargaBeli', '$hargaJual', '$laba')";
   $result_produk = mysqli_query($db, $sql_produk);
-    if ($result_produk) {
-      $sql_masuk = "INSERT INTO produk_masuk (id_produk, jumlah_masuk, created_at) VALUES ('$kode_produk', '$stok', NOW())";
-      $result_masuk = mysqli_query($db, $sql_masuk);
-      // ALERT BERHASIL, BELUM BERFUNGSI
-      header('Location: manageData.php');
-      echo "<script>alert('Produk Berhasil Ditambah')</script>";
-      
-      exit;
-    }
+  if ($result_produk) {
+    $sql_masuk = "INSERT INTO produk_masuk (id_produk, jumlah_masuk, created_at) VALUES ('$kode_produk', '$stok', NOW())";
+    $result_masuk = mysqli_query($db, $sql_masuk);
+    // ALERT BERHASIL, BELUM BERFUNGSI
+    header('Location: manageData.php');
+    echo "<script>alert('Produk Berhasil Ditambah')</script>";
+    
+    exit;
+  }
   }
   
 }
@@ -244,11 +244,11 @@ if (isset($_POST['delete'])) {
                       <div class="modal fade" id="edit<?= $no; ?>" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
                         <div class="modal-dialog">
                           <div class="modal-content">
-                            <div class="modal-header">
-                              <h1 class="modal-title fs-5" id="exampleModalLabel">Edit Produk</h1>
-                              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                            </div>
                             <div class="modal-body">
+                              <div class="header mb-3 d-flex align-items-center justify-content-between">
+                                <h1 class="modal-title fs-5" id="exampleModalLabel">Edit Produk</h1>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                              </div>
                               <form method="POST" class="flex-column rounded-3 justify-content-center">
                                 <input type="hidden" name="kode_produk" value="<?= $data['id_produk']; ?>">
 
@@ -300,7 +300,7 @@ if (isset($_POST['delete'])) {
                                   <input type="number" value="<?= $data['harga_jual']; ?>" name="harga_jual" placeholder="Harga Jual" class="form-control" />
                                 </div>
 
-                                <div class="modal-footer">
+                                <div class="footer">
                                   <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                                   <button type="submit" name="save" class="btn btn-primary">Save changes</button>
                                 </div>
@@ -359,13 +359,13 @@ if (isset($_POST['delete'])) {
    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
-        <div class="modal-header">
-          <h1 class="modal-title fs-5" id="exampleModalLabel">Tambah Produk</h1>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
         <div class="modal-body">
+          <div class="header mb-3 d-flex align-items-center justify-content-between">
+            <h1 class="modal-title fs-5" id="exampleModalLabel">Tambah Produk</h1>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
           <!-- FORM ADD DATA -->
-          <form method="POST" class="w-100 h-100 p-4 d-flex flex-column rounded-3 justify-content-center">
+          <form method="POST" class="d-flex flex-column rounded-3 justify-content-center">
             <div class="mb-3">
                 <input type="text" name="kode_produk" placeholder="Id Produk" value="PR_" class="form-control" id="" aria-describedby="emailHelp" required />
             </div>
@@ -408,16 +408,15 @@ if (isset($_POST['delete'])) {
               <div class="mb-3">
                 <input type="number" name="harga_jual" placeholder="Harga Jual" class="form-control" id="" required />
               </div>
-            </div>
-            <div class="modal-footer">
+            <div class="footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             <!-- *Button name=submit nabrak sama type=button -->
             <button name="submit" class="btn btn-primary">Add changes</button>
-          </div>
+            </div>
           <!-- *PENEMPATAN FORM (gak bisa di submit jika button tidak didalam tag form) -->
-        </form>
+          </form>
         </div>
+      </div>
     </div>
-        
   </div>
 </html>

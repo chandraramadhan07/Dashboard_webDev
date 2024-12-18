@@ -43,11 +43,11 @@ $result_jumlah_keluar = mysqli_query($db, $sql_jumlah_keluar);
 $jumlah_keluar = mysqli_num_rows($result_jumlah_keluar);
 
 // PRODUK MASUK
-$sql_produk_masuk = "SELECT produk.nama_produk, produk_masuk.jumlah_masuk FROM produk_masuk INNER JOIN produk ON produk_masuk.id_produk = produk.id_produk ORDER BY created_at DESC LIMIT $limit_baris";
+$sql_produk_masuk = "SELECT produk.nama_produk, produk_masuk.jumlah_masuk FROM produk_masuk INNER JOIN produk ON produk_masuk.id_produk = produk.id_produk ORDER BY produk_masuk.id_masuk DESC LIMIT $limit_baris";
 $result_produk_masuk = mysqli_query($db, $sql_produk_masuk);
 
 // PRODUK KELUAR
-$sql_produk_keluar = "SELECT produk.nama_produk, produk_keluar.jumlah_keluar FROM produk_keluar INNER JOIN produk ON produk_keluar.id_produk = produk.id_produk ORDER BY created_at DESC LIMIT $limit_baris";
+$sql_produk_keluar = "SELECT produk.nama_produk, produk_keluar.jumlah_keluar FROM produk_keluar INNER JOIN produk ON produk_keluar.id_produk = produk.id_produk ORDER BY produk_keluar.id_keluar DESC LIMIT $limit_baris";
 $result_produk_keluar = mysqli_query($db, $sql_produk_keluar);
 ?>
 

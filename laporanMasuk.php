@@ -24,7 +24,7 @@ if(!isset($_GET['search'])) {
                   FROM produk_masuk
                   LEFT JOIN produk ON produk.id_produk = produk_masuk.id_produk
                   LEFT JOIN kategori ON produk.kategori = kategori.id_kategori
-                  ORDER BY produk_masuk.created_at DESC";
+                  ORDER BY produk_masuk.id_masuk DESC";
 $result_laporan = mysqli_query($db, $sql_laporan);
 } else {
   $filter_search = $_GET['search'];
@@ -41,7 +41,7 @@ $result_laporan = mysqli_query($db, $sql_laporan);
                          INNER JOIN produk ON produk.id_produk = produk_masuk.id_produk
                          INNER JOIN kategori ON produk.kategori = kategori.id_kategori
                          WHERE produk.nama_produk LIKE '%$filter_search%'
-                         ORDER BY produk_masuk.created_at DESC";
+                         ORDER BY produk_masuk.id_masuk DESC";
  $result_laporan = mysqli_query($db, $sql_laporan_search);
 
 }
@@ -82,16 +82,16 @@ $sql_laporan = "SELECT
                 FROM produk_masuk
                 LEFT JOIN produk ON produk.id_produk = produk_masuk.id_produk
                 LEFT JOIN kategori ON produk.kategori = kategori.id_kategori
-                ORDER BY produk_masuk.created_at DESC";
+                ORDER BY produk_masuk.id_masuk DESC";
 $result_laporan_download = mysqli_query($db, $sql_laporan);
 
 if (isset($_POST['export'])) {
-    $name_file = "Laporan_Penjualan_" . date('dmY_hms') . ".pdf";
+    $name_file = "Laporan_BarangMasuk_" . date('dmY_hms') . ".pdf";
     $pdf = new FPDF();
     $pdf->AddPage();
 
     $pdf->SetFont('Arial', 'B', 12);
-    $pdf->Cell(190, 10, 'Laporan Penjualan', 0, 1, 'C');
+    $pdf->Cell(190, 10, 'Laporan Barang Masuk', 0, 1, 'C');
     $pdf->Ln(10);
 
     $pdf->SetFont('Arial', 'B', 10);
@@ -230,41 +230,39 @@ if (isset($_POST['export'])) {
           <div class="container-fluid px-5 pt-4 py-5">
             <div class="= d-flex justify-content-between mb-3">
             <h2 class="mb-3">Laporan Barang Masuk</h2>
-
-              <div class="filter d-flex">
-                <form method="GET" class="d-flex" role="search">
-                    <div class="input-group" style="height: 7px">
-                        <input type="text" name="search" value="<?php if (isset($_GET['search'])) {echo $_GET['search'];} ?>" class="search form-control rounded-start-5 border-0" placeholder="Search by name" aria-label="Search" aria-describedby="search-icon">
-                        <span class="search input-group-text rounded-end-5 border-0" id="search-icon">
-                        <button type="submit" class="border-0 btn-search"><i class=" bi bi-search"></i></button>
-                        </span>
-                    </div>
-                </form>
-                <form method="GET">
-                          <select name="bulan" class="form-select ms-2">
-                            <option selected>Pilih Bulan</option>
-                            <option value="01">Januari</option>
-                            <option value="02">Februari</option>
-                            <option value="03">Maret</option>
-                            <option value="04">April</option>
-                            <option value="05">Mei</option>
-                            <option value="06">Juni</option>
-                            <option value="07">Juli</option>
-                            <option value="08">Agustus</option>
-                            <option value="09">September</option>
-                            <option value="10">Oktober</option>
-                            <option value="11">November</option>
-                            <option value="12">Desember</option>
-                          </select>
-                          <button class="border-0 ms-2 rounded" type="submit">Filter</button>
-                          <button name="reset">Reset</button>
-                      </form>
-              </div>
-
             </div>
             <div class="flex-wrap container-fluid">
               <div class="data-stok row">
                 <div class="card pt-5 cards shadow-sm border-0 col-md-12">
+                <div class="filter mb-3 d-flex justify-content-between">
+                  <form method="GET" class="d-flex" role="search">
+                      <div class="input-group" style="height: 7px">
+                          <input type="text" name="search" value="<?php if (isset($_GET['search'])) {echo $_GET['search'];} ?>" class="bg-white search form-control rounded-start-5 border-0" placeholder="Search by name" aria-label="Search" aria-describedby="search-icon">
+                          <span class="search bg-white input-group-text rounded-end-5 border-0" id="search-icon">
+                          <button type="submit" class="border-0 btn-search bg-white"><i class="bi bi-search"></i></button>
+                          </span>
+                      </div>
+                  </form>
+                  <form method="GET" class="d-flex">
+                    <select name="bulan" class="form-select ms-2">
+                      <option selected>Pilih Bulan</option>
+                      <option value="01">Januari</option>
+                      <option value="02">Februari</option>
+                      <option value="03">Maret</option>
+                      <option value="04">April</option>
+                      <option value="05">Mei</option>
+                      <option value="06">Juni</option>
+                      <option value="07">Juli</option>
+                      <option value="08">Agustus</option>
+                      <option value="09">September</option>
+                      <option value="10">Oktober</option>
+                      <option value="11">November</option>
+                      <option value="12">Desember</option>
+                    </select>
+                    <button class="border-0 ms-2 rounded" type="submit">Filter</button>
+                    <button name="reset" class="border-0 ms-2 rounded">Reset</button>
+                  </form>
+                </div>
                   <div class="overflow-x-auto card-body">
                     <div class="table-responsive">
                     <table class="table table-hover border-secondary px-2">
@@ -303,7 +301,7 @@ if (isset($_POST['export'])) {
                     </div>
                     <div class="btn-download d-flex align-items-center justify-content-center">
                       <form method="POST">
-                        <button type="submit" name="export" class="fs-4 text-white bg-primary px-4 rounded text-center"><i class="bi bi-cloud-arrow-down"></i></button>
+                        <button type="submit" name="export" class="fs-4 border-0 text-white bg-primary px-4 rounded text-center"><i class="bi bi-cloud-arrow-down"></i></button>
                       </form>
                     </div>
                   </div>

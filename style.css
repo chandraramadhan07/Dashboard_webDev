@@ -436,15 +436,17 @@ input.switch:checked + label.checkbox-label:after {
 
 /* Laporan */
 input.search {
-  background-color: var(--hover) !important;
   outline: none !important;
   box-shadow: none !important;
 }
 
 button.btn-search,
 span.search {
-  background-color: var(--hover) !important;
   outline: none !important;
+}
+
+input.search:hover, button.btn-search:hover, span.search:hover {
+  background-color: white !important;
 }
 /* End Laporan */
 

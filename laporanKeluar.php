@@ -27,7 +27,7 @@ if(!isset($_GET['search'])) {
                   FROM produk_keluar
                   LEFT JOIN produk ON produk.id_produk = produk_keluar.id_produk
                   LEFT JOIN kategori ON produk.kategori = kategori.id_kategori
-                  ORDER BY produk_keluar.created_at DESC";
+                  ORDER BY produk_keluar.id_keluar DESC";
 $result_laporan = mysqli_query($db, $sql_laporan);
 } else {
   $filter_search = $_GET['search'];
@@ -46,7 +46,7 @@ $result_laporan = mysqli_query($db, $sql_laporan);
                          INNER JOIN produk ON produk.id_produk = produk_keluar.id_produk
                          INNER JOIN kategori ON produk.kategori = kategori.id_kategori
                          WHERE produk.nama_produk LIKE '%$filter_search%'
-                         ORDER BY produk_keluar.created_at DESC";
+                         ORDER BY produk_keluar.id_keluar DESC";
  $result_laporan = mysqli_query($db, $sql_laporan_search);
 
 }
@@ -91,7 +91,7 @@ $sql_laporan = "SELECT
                 FROM produk_keluar
                 LEFT JOIN produk ON produk.id_produk = produk_keluar.id_produk
                 LEFT JOIN kategori ON produk.kategori = kategori.id_kategori
-                ORDER BY produk_keluar.created_at DESC";
+                ORDER BY produk_keluar.id_keluar DESC";
 $result_laporan_download = mysqli_query($db, $sql_laporan);
 
 if (isset($_POST['export'])) {
@@ -100,33 +100,35 @@ if (isset($_POST['export'])) {
     $pdf->AddPage();
 
     $pdf->SetFont('Arial', 'B', 12);
-    $pdf->Cell(190, 10, 'Laporan Barang Masuk', 0, 1, 'C');
+    $pdf->Cell(190, 10, 'Laporan Penjualan', 0, 1, 'C');
     $pdf->Ln(10);
 
     $pdf->SetFont('Arial', 'B', 10);
     $pdf->Cell(10, 10, 'No', 1);
-    $pdf->Cell(20, 10, 'ID', 1);
-    $pdf->Cell(50, 10, 'Nama Produk', 1);
+    $pdf->Cell(15, 10, 'ID', 1);
+    $pdf->Cell(30, 10, 'Nama Produk', 1);
     $pdf->Cell(15, 10, 'Stok', 1);
     $pdf->Cell(20, 10, 'Harga Beli', 1);
     $pdf->Cell(20, 10, 'Harga Jual', 1);
     $pdf->Cell(20, 10, 'Laba', 1);
     $pdf->Cell(20, 10, 'Jumlah', 1);
+    $pdf->Cell(30, 10, 'Laba Penjualan', 1);
     $pdf->Cell(20, 10, 'Tanggal', 1);
     $pdf->Ln();
 
     $pdf->SetFont('Arial', '', 10);
     $no=1;
-    while ($row = mysqli_fetch_assoc($result_laporan_download)) {
+    while ($table = mysqli_fetch_assoc($result_laporan_download)) {
         $pdf->Cell(10, 10, $no++, 1);
-        $pdf->Cell(20, 10, $row['id_produk'], 1);
-        $pdf->Cell(50, 10, $row['nama_produk'], 1);
-        $pdf->Cell(15, 10, $row['stok'], 1);
-        $pdf->Cell(20, 10, number_format($row['harga_beli']), 1);
-        $pdf->Cell(20, 10, number_format($row['harga_jual']), 1);
-        $pdf->Cell(20, 10, number_format($row['laba']), 1);
-        $pdf->Cell(20, 10, $row['jumlah_keluar'], 1);
-        $pdf->Cell(20, 10, $row['tanggal_keluar'], 1);
+        $pdf->Cell(15, 10, $table['id_produk'], 1);
+        $pdf->Cell(30, 10, $table['nama_produk'], 1);
+        $pdf->Cell(15, 10, $table['stok'], 1);
+        $pdf->Cell(20, 10, number_format($table['harga_beli']), 1);
+        $pdf->Cell(20, 10, number_format($table['harga_jual']), 1);
+        $pdf->Cell(20, 10, number_format($table['laba']), 1);
+        $pdf->Cell(20, 10, $table['jumlah_keluar'], 1);
+        $pdf->Cell(30, 10, number_format($table['laba_penjualan']), 1);
+        $pdf->Cell(20, 10, $table['tanggal_keluar'], 1);
         $pdf->Ln();
     }
 
@@ -241,47 +243,39 @@ if (isset($_POST['export'])) {
           <div class="container-fluid px-5 pt-4 py-5">
             <div class="= d-flex justify-content-between mb-3">
             <h2 class="mb-3">Laporan Barang Keluar</h2>
-
-            <div class="filter d-flex">
-                <form method="GET" class="d-flex" role="search">
-                    <div class="input-group" style="height: 7px">
-                        <input type="text" name="search" value="<?php if (isset($_GET['search'])) {echo $_GET['search'];} ?>" class="search form-control rounded-start-5 border-0" placeholder="Search by name" aria-label="Search" aria-describedby="search-icon">
-                        <span class="search input-group-text rounded-end-5 border-0" id="search-icon">
-                        <button type="submit" class="border-0 btn-search"><i class=" bi bi-search"></i></button>
-                        </span>
-                    </div>
-                </form>
-                <form>
-                    <div class="mb-3">
-                      <div class="d-flex align-items-center justify-content-center">
-                        <form method="GET">
-                          <select name="bulan" class="form-select ms-2">
-                            <option selected>Pilih Bulan</option>
-                            <option value="01">Januari</option>
-                            <option value="02">Februari</option>
-                            <option value="03">Maret</option>
-                            <option value="04">April</option>
-                            <option value="05">Mei</option>
-                            <option value="06">Juni</option>
-                            <option value="07">Juli</option>
-                            <option value="08">Agustus</option>
-                            <option value="09">September</option>
-                            <option value="10">Oktober</option>
-                            <option value="11">November</option>
-                            <option value="12">Desember</option>
-                          </select>
-                          <button class="border-0 ms-2 rounded" type="submit">Filter</button>
-                          <button name="reset">Reset</button>
-                      </form>
-                      </div>
-                    </div>
-                </form>
-            </div>
-
             </div>
             <div class="flex-wrap container-fluid">
               <div class="data-stok row">
                 <div class="card pt-5 cards shadow-sm border-0 col-md-12">
+                <div class="filter mb-3 d-flex justify-content-between">
+                  <form method="GET" class="d-flex" role="search">
+                      <div class="input-group" style="height: 7px">
+                          <input type="text" name="search" value="<?php if (isset($_GET['search'])) {echo $_GET['search'];} ?>" class="bg-white search form-control rounded-start-5 border-0" placeholder="Search by name" aria-label="Search" aria-describedby="search-icon">
+                          <span class="search bg-white input-group-text rounded-end-5 border-0" id="search-icon">
+                          <button type="submit" class="border-0 btn-search bg-white"><i class="bi bi-search"></i></button>
+                          </span>
+                      </div>
+                  </form>
+                  <form method="GET" class="d-flex">
+                    <select name="bulan" class="form-select ms-2">
+                      <option selected>Pilih Bulan</option>
+                      <option value="01">Januari</option>
+                      <option value="02">Februari</option>
+                      <option value="03">Maret</option>
+                      <option value="04">April</option>
+                      <option value="05">Mei</option>
+                      <option value="06">Juni</option>
+                      <option value="07">Juli</option>
+                      <option value="08">Agustus</option>
+                      <option value="09">September</option>
+                      <option value="10">Oktober</option>
+                      <option value="11">November</option>
+                      <option value="12">Desember</option>
+                    </select>
+                    <button class="border-0 ms-2 rounded" type="submit">Filter</button>
+                    <button name="reset" class="border-0 ms-2 rounded">Reset</button>
+                  </form>
+                </div>
                   <div class="overflow-x-auto card-body">
                     <div class="table-responsive">
                     <table id="" class="table table-hover border-secondary px-2">
@@ -322,7 +316,7 @@ if (isset($_POST['export'])) {
                     </div>
                     <div class="btn-download d-flex align-items-center justify-content-center">
                       <form method="POST">
-                        <button type="submit" name="export" class="fs-4 text-white bg-primary px-4 rounded text-center"><i class="bi bi-cloud-arrow-down"></i></button>
+                        <button type="submit" name="export" class="fs-4 border-0 text-white bg-primary px-4 rounded text-center"><i class="bi bi-cloud-arrow-down"></i></button>
                       </form>
                     </div>
                   </div>

@@ -221,33 +221,4 @@ if (isset($_POST['tambah'])) {
     <script src="script.js"></script>
     <script src="chart.js"></script>
   </body>
-  <!-- Modal ADD DATA -->
-<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-body">
-          <div class="header mb-3 d-flex align-items-center justify-content-between">
-            <h1 class="modal-title fs-5" id="exampleModalLabel">Catat barang masuk</h1>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <!-- FORM ADD DATA -->
-          <form method="POST" class="d-flex flex-column rounded-3 justify-content-center">
-              <select class="form-control mb-3" name="id_produk">
-                <?php while ($select = mysqli_fetch_array($result_tambah_stok)):?>
-                <option value="<?= $select['id_produk'] ?>"><?= $select['nama_produk'] ?></option>
-                <?php endwhile ?>
-              </select>
-              
-              <div class="mb-3">
-                <input type="number" name="tambah_stok" placeholder="Tambah" class="form-control" id="" required />
-              </div>
-              
-            <div class="footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-              <button name="tambah" class="btn btn-primary">Add changes</button>
-            </div>
-        </form>
-        </div>
-    </div>
-  </div>
 </html>

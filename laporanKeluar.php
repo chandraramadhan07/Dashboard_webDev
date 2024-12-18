@@ -75,28 +75,64 @@ if(isset($_GET['reset'])) {
   header('location: laporanKeluar.php');
 }
 
-// FILTER DATA BY BULAN
-// if(isset($_GET['filter'])) {
-//   $sql_laporan_bulan = "SELECT 
-//                          produk.id_produk, 
-//                          produk.nama_produk, 
-//                          produk.stok, 
-//                          produk.harga_beli, 
-//                          produk.harga_jual,
-//                          (produk.harga_jual - produk.harga_beli) AS laba,
-//                          ((produk.harga_jual - produk.harga_beli)*produk_keluar.jumlah_keluar) AS laba_penjualan,
-//                          kategori.nama_kategori, 
-//                          produk_keluar.jumlah_keluar,
-//                          produk_keluar.created_at AS tanggal_keluar
-//                          FROM produk_keluar
-//                          INNER JOIN produk ON produk.id_produk = produk_keluar.id_produk
-//                          INNER JOIN kategori ON produk.kategori = kategori.id_kategori
-//                          WHERE MONTH(produk_keluar.created_at) ='%$filter_bulan%'
-//                          ORDER BY produk_keluar.created_at DESC";
-//  $result_laporan = mysqli_query($db, $sql_laporan_bulan);
-// }
+// EXPORT TO PDF
+require('fpdf.php');
+$sql_laporan = "SELECT 
+                produk.id_produk, 
+                produk.nama_produk,  
+                produk.stok, 
+                produk.harga_beli, 
+                produk.harga_jual,
+                (produk.harga_jual - produk.harga_beli) AS laba,
+                ((produk.harga_jual - produk.harga_beli) * produk_keluar.jumlah_keluar) AS laba_penjualan,
+                kategori.nama_kategori,
+                produk_keluar.jumlah_keluar,
+                produk_keluar.created_at AS tanggal_keluar
+                FROM produk_keluar
+                LEFT JOIN produk ON produk.id_produk = produk_keluar.id_produk
+                LEFT JOIN kategori ON produk.kategori = kategori.id_kategori
+                ORDER BY produk_keluar.created_at DESC";
+$result_laporan_download = mysqli_query($db, $sql_laporan);
 
+if (isset($_POST['export'])) {
+    $name_file = "Laporan_Penjualan_" . date('dmY_hms') . ".pdf";
+    $pdf = new FPDF();
+    $pdf->AddPage();
 
+    $pdf->SetFont('Arial', 'B', 12);
+    $pdf->Cell(190, 10, 'Laporan Barang Masuk', 0, 1, 'C');
+    $pdf->Ln(10);
+
+    $pdf->SetFont('Arial', 'B', 10);
+    $pdf->Cell(10, 10, 'No', 1);
+    $pdf->Cell(20, 10, 'ID', 1);
+    $pdf->Cell(50, 10, 'Nama Produk', 1);
+    $pdf->Cell(15, 10, 'Stok', 1);
+    $pdf->Cell(20, 10, 'Harga Beli', 1);
+    $pdf->Cell(20, 10, 'Harga Jual', 1);
+    $pdf->Cell(20, 10, 'Laba', 1);
+    $pdf->Cell(20, 10, 'Jumlah', 1);
+    $pdf->Cell(20, 10, 'Tanggal', 1);
+    $pdf->Ln();
+
+    $pdf->SetFont('Arial', '', 10);
+    $no=1;
+    while ($row = mysqli_fetch_assoc($result_laporan_download)) {
+        $pdf->Cell(10, 10, $no++, 1);
+        $pdf->Cell(20, 10, $row['id_produk'], 1);
+        $pdf->Cell(50, 10, $row['nama_produk'], 1);
+        $pdf->Cell(15, 10, $row['stok'], 1);
+        $pdf->Cell(20, 10, number_format($row['harga_beli']), 1);
+        $pdf->Cell(20, 10, number_format($row['harga_jual']), 1);
+        $pdf->Cell(20, 10, number_format($row['laba']), 1);
+        $pdf->Cell(20, 10, $row['jumlah_keluar'], 1);
+        $pdf->Cell(20, 10, $row['tanggal_keluar'], 1);
+        $pdf->Ln();
+    }
+
+    $pdf->Output('D', $name_file);
+    exit;
+}
 ?>
 
 <!DOCTYPE html>
@@ -285,7 +321,9 @@ if(isset($_GET['reset'])) {
                     </table>
                     </div>
                     <div class="btn-download d-flex align-items-center justify-content-center">
-                        <a href="" class="fs-4 text-white bg-primary px-4 rounded text-center"><i class="bi bi-cloud-arrow-down"></i></a>
+                      <form method="POST">
+                        <button type="submit" name="export" class="fs-4 text-white bg-primary px-4 rounded text-center"><i class="bi bi-cloud-arrow-down"></i></button>
+                      </form>
                     </div>
                   </div>
                 </div>

@@ -67,6 +67,61 @@ $result_laporan = mysqli_query($db, $sql_laporan_bulan);
 if(isset($_GET['reset'])) {
   header('location: laporanMasuk.php');
 }
+
+// EXPORT TO PDF
+require('fpdf.php');
+$sql_laporan = "SELECT 
+                produk.id_produk, 
+                produk.nama_produk,  
+                produk.stok, 
+                produk.harga_beli, 
+                produk.harga_jual,
+                kategori.nama_kategori,
+                produk_masuk.jumlah_masuk,
+                produk_masuk.created_at AS tanggal_masuk
+                FROM produk_masuk
+                LEFT JOIN produk ON produk.id_produk = produk_masuk.id_produk
+                LEFT JOIN kategori ON produk.kategori = kategori.id_kategori
+                ORDER BY produk_masuk.created_at DESC";
+$result_laporan_download = mysqli_query($db, $sql_laporan);
+
+if (isset($_POST['export'])) {
+    $name_file = "Laporan_Penjualan_" . date('dmY_hms') . ".pdf";
+    $pdf = new FPDF();
+    $pdf->AddPage();
+
+    $pdf->SetFont('Arial', 'B', 12);
+    $pdf->Cell(190, 10, 'Laporan Penjualan', 0, 1, 'C');
+    $pdf->Ln(10);
+
+    $pdf->SetFont('Arial', 'B', 10);
+    $pdf->Cell(10, 10, 'No', 1);
+    $pdf->Cell(20, 10, 'ID', 1);
+    $pdf->Cell(50, 10, 'Nama Produk', 1);
+    $pdf->Cell(15, 10, 'Stok', 1);
+    $pdf->Cell(20, 10, 'Harga Beli', 1);
+    $pdf->Cell(20, 10, 'Harga Jual', 1);
+    $pdf->Cell(20, 10, 'Jumlah', 1);
+    $pdf->Cell(20, 10, 'Tanggal', 1);
+    $pdf->Ln();
+
+    $pdf->SetFont('Arial', '', 10);
+    $no=1;
+    while ($table = mysqli_fetch_assoc($result_laporan_download)) {
+        $pdf->Cell(10, 10, $no++, 1);
+        $pdf->Cell(20, 10, $table['id_produk'], 1);
+        $pdf->Cell(50, 10, $table['nama_produk'], 1);
+        $pdf->Cell(15, 10, $table['stok'], 1);
+        $pdf->Cell(20, 10, number_format($table['harga_beli']), 1);
+        $pdf->Cell(20, 10, number_format($table['harga_jual']), 1);
+        $pdf->Cell(20, 10, $table['jumlah_masuk'], 1);
+        $pdf->Cell(20, 10, $table['tanggal_masuk'], 1);
+        $pdf->Ln();
+    }
+
+    $pdf->Output('D', $name_file);
+    exit;
+}
 ?>
 
 <!DOCTYPE html>
@@ -247,7 +302,9 @@ if(isset($_GET['reset'])) {
                     </table>
                     </div>
                     <div class="btn-download d-flex align-items-center justify-content-center">
-                        <a href="" class="fs-4 text-white bg-primary px-4 rounded text-center"><i class="bi bi-cloud-arrow-down"></i></a>
+                      <form method="POST">
+                        <button type="submit" name="export" class="fs-4 text-white bg-primary px-4 rounded text-center"><i class="bi bi-cloud-arrow-down"></i></button>
+                      </form>
                     </div>
                   </div>
                 </div>
@@ -261,128 +318,4 @@ if(isset($_GET['reset'])) {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <script src="script.js"></script>
   </body>
-
-  <!-- Modal -->
-  <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h1 class="modal-title fs-5" id="exampleModalLabel">Tambah Produk</h1>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <!-- FORM ADD DATA -->
-          <form method="POST" class="w-100 h-50 p-4 d-flex flex-column rounded-3 justify-content-center">
-            <div class="mb-3">
-              <input type="text" name="nama_produk" placeholder="Nama Produk" class="form-control" id="" aria-describedby="emailHelp" />
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Kategori</label>
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="kategori" id="kategori1" value="Elektronik" />
-                <label class="form-check-label" for="kategori1">Elektronik</label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="kategori" id="kategori2" value="Pakaian" />
-                <label class="form-check-label" for="kategori2">Pakaian</label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="kategori" id="kategori3" value="Makanan" />
-                <label class="form-check-label" for="kategori3">Makanan</label>
-              </div>
-            </div>
-            <div class="mb-3">
-              <input type="number" name="stok_awal" placeholder="Stok Awal" class="form-control" id="" />
-            </div>
-            <div class="mb-3">
-              <input type="number" name="harga_beli" placeholder="Harga Beli" class="form-control" id="" />
-            </div>
-            <div class="mb-3">
-              <input type="number" name="harga_jual" placeholder="Harga Jual" class="form-control" id="" />
-            </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          <!-- *Button name=submit nabrak sama type=button -->
-          <button name="submit" class="btn btn-primary">Add changes</button>
-        </div>
-        <!-- *PENEMPATAN FORM (gak bisa di submit jika button tidak didalam tag form) -->
-        </form>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal Edit -->
-  <div class="modal fade" id="edit" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h1 class="modal-title fs-5" id="exampleModalLabel">Edit Produk</h1>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <form method="POST" class="w-100 h-50 p-4 d-flex flex-column rounded-3 justify-content-center">
-            <div class="mb-3">
-              <input type="email" name="nama_produk" placeholder="Nama Produk" class="form-control" id="" aria-describedby="emailHelp" />
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Kategori</label>
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="kategori" id="kategori1" value="Elektronik" />
-                <label class="form-check-label" for="kategori1">Elektronik</label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="kategori" id="kategori2" value="Pakaian" />
-                <label class="form-check-label" for="kategori2">Pakaian</label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="kategori" id="kategori3" value="Makanan" />
-                <label class="form-check-label" for="kategori3">Makanan</label>
-              </div>
-            </div>
-            <div class="mb-3">
-              <input type="number" name="stok_awal" placeholder="Stok Awal" class="form-control" id="" />
-            </div>
-            <div class="mb-3">
-              <input type="number" name="harga_beli" placeholder="Harga Beli" class="form-control" id="" />
-            </div>
-            <div class="mb-3">
-              <input type="number" name="harga_jual" placeholder="Harga Jual" class="form-control" id="" />
-            </div>
-          
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          <!-- *name=save nabrak dengan type=button -->
-          <button name="save" class="btn btn-primary">Save changes</button>
-        <!-- *PENEMPATAN FORM (gak bisa di klik jika button tidak didalam tag form) -->  
-          </form>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal Delete -->
-  <div class="modal fade" id="delete" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h1 class="modal-title fs-5" id="exampleModalLabel">Hapus Produk</h1>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <form class="w-100 h-50 p-4 d-flex flex-column rounded-3 justify-content-center">
-            <p class="fw-semibold">Apakah anda yakin ingin menghapus {nama produk} ini?</p>
-          
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          <!-- *name=delete nabrak dengan type=button -->
-          <button name='delete' class='btn btn-danger'>Delete</button>"
-          <!-- *PENEMPATAN FORM (gak bisa di klik jika button tidak didalam tag form) --> 
-        </form>
-        </div>
-      </div>
-    </div>
-  </div>
 </html>
